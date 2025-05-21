@@ -1,6 +1,4 @@
 from dash import Dash, html, dcc
-import config
-# from layouts.home import layout as home_layout
 from callbacks import home_callbacks, routing_callbacks
 
 app = Dash(__name__, suppress_callback_exceptions=True)
@@ -16,7 +14,6 @@ app.layout = html.Div([
 # Register callbacks
 home_callbacks.register_callbacks(app)
 routing_callbacks.register_callbacks(app)
-# files_callback.register_callbacks(app)
 
 if __name__ == '__main__':
     app.run(debug=True)  

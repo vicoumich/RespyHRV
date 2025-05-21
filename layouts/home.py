@@ -28,21 +28,21 @@ layout = html.Div([
             multiple=False
         ),
         html.Div(id='upload-status')
-    ], style={'marginBottom': '40px'}),
+    ], style={'marginBottom': '40px'})
 
-    html.Div([
-        html.H2("Ou consulter les fichiers existants :"),
-        html.A(
-            html.Button("Voir les fichiers", style={
-                'padding': '10px 20px',
-                'fontSize': '16px',
-                'borderRadius': '8px',
-                'backgroundColor': '#007BFF',
-                'color': 'white',
-                'border': 'none',
-                'cursor': 'pointer'
-            }),
-            href="/files"
-        )
-    ])
+    # html.Div([
+    #     html.H2("Ou consulter les fichiers existants :"),
+    #     html.A(
+    #         html.Button("Voir les fichiers", style={
+    #             'padding': '10px 20px',
+    #             'fontSize': '16px',
+    #             'borderRadius': '8px',
+    #             'backgroundColor': '#007BFF',
+    #             'color': 'white',
+    #             'border': 'none',
+    #             'cursor': 'pointer'
+    #         }),
+    #         href="/files"
+    #     )
+    # ])
 ])
