@@ -1,6 +1,7 @@
 from dash import Output, Input
 from layouts.home import layout as home_layout
 from layouts.files import get_layout as files_layout
+from layouts.select import get_layout as select_layout
 
 """
 Callback appellé lors d'une modification de la valeur de l'url.
@@ -15,5 +16,7 @@ def register_callbacks(app):
     def display_page(pathname):
         if pathname == '/files':
             return files_layout()
+        elif pathname == '/select':
+            return select_layout()
         else:
             return home_layout

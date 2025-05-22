@@ -1,5 +1,5 @@
 from dash import Dash, html, dcc
-from callbacks import home_callbacks, routing_callbacks
+from callbacks import home_callbacks, routing_callbacks, select_callbacks
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 server = app.server
@@ -14,6 +14,7 @@ app.layout = html.Div([
 # Register callbacks
 home_callbacks.register_callbacks(app)
 routing_callbacks.register_callbacks(app)
+select_callbacks.register_callbacks(app)
 
 if __name__ == '__main__':
     app.run(debug=True)  

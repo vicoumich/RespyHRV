@@ -3,6 +3,12 @@ import base64
 import dash
 from dash import Input, Output, State, ctx, no_update, dcc
 import config
+from modules.bdf_reader import extract_channels
+import json
+
+# Données transmises à la page select/
+UPLOAD_TRACKER = {'last_file': None, 'channels': []}
+
 
 """
 Callback appelé quand le contenue de l'input à fichier est
@@ -31,4 +37,13 @@ def register_callbacks(app: dash.Dash):
         with open(file_path, 'wb') as f:
             f.write(decoded)
 
-        return f"Fichier été enregistré avec succès: {filename}"
+        # Extraire les channels et stocker l'état
+        UPLOAD_TRACKER['last_file'] = file_path
+        UPLOAD_TRACKER['channels'] = extract_channels(file_path)
+
+        # Le fichier représente une session, stockée en json
+        with open('.\session\session.json', 'w') as json_file:
+            json.dump(UPLOAD_TRACKER, json_file)
+
+        return dcc.Location(pathname='/select', id='redirect-after-upload')
+        # return f"Fichier été enregistré avec succès: {filename}"
