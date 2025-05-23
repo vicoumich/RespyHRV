@@ -43,5 +43,6 @@ def get_layout():
 
         html.Br(),
 
-        html.Button("Valider", id='validate-btn')
+        html.Button("Valider", id='validate-btn'),
+        html.Div(id='channels-status')
     ])
