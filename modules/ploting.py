@@ -1,5 +1,4 @@
 import plotly.graph_objects as go
-from dash import dcc
 
 def build_fig(time=None, init_signal=None, process_signal=None, cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None) -> go.Figure:
     fig=go.Figure()
@@ -83,4 +82,4 @@ def build_fig(time=None, init_signal=None, process_signal=None, cycles=None, ecg
     height=400,
     margin=dict(l=40, r=20, t=50, b=40)
     )
-    return dcc.Graph(figure=fig)
+    return fig
