@@ -1,6 +1,8 @@
 import plotly.graph_objects as go
 
-def build_fig(time=None, init_signal=None, process_signal=None, cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None) -> go.Figure:
+def build_fig(time=None, init_signal=None, process_signal=None,
+               cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
+               title="Cycles respiratoires") -> go.Figure:
     fig=go.Figure()
     if not(init_signal is None):
         # Courbe originale (bleu)
@@ -72,7 +74,7 @@ def build_fig(time=None, init_signal=None, process_signal=None, cycles=None, ecg
 
     # Mise en page
     fig.update_layout(
-    title="Signal de respiration : brut vs traité",
+    title=title,
     xaxis=dict(
         title="Temps (s)",
         type="linear",

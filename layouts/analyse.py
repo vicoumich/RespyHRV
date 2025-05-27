@@ -12,7 +12,7 @@ def get_layout():
     # debug
     # print('ok')
     # fin debug
-    if os.path.exists('.\session\session.json'):
+    if os.path.exists(session_path):
         with open(session_path, 'r') as session:
             session_info = json.load(session)
     else: return html.Div([html.H1(f"Aucun fichier session trouvé dans {session_path}")])
