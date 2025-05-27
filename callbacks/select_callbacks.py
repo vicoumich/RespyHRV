@@ -1,6 +1,7 @@
 from dash import Input, State, dcc, Output
 from callbacks.home_callbacks import UPLOAD_TRACKER
 import json
+from config import session_path
 
 
 def register_callbacks(app):
@@ -30,7 +31,7 @@ def register_callbacks(app):
         UPLOAD_TRACKER['selected_channels'] = channels
 
         # Ajout des channels selectionnées dans le json session
-        with open('.\session\session.json', 'w') as json_file:
+        with open(session_path, 'w') as json_file:
             json.dump(UPLOAD_TRACKER, json_file)
             
         return dcc.Location(pathname='/analyse', id='redirect-after-select')

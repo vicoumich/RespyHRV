@@ -4,8 +4,8 @@ import os
 import modules.bdf_reader
 import modules.ploting
 import numpy as np
+from config import session_path
 
-session_path = '.\session\session.json'
 
 def get_layout():
     # Lecture du fichier de session
