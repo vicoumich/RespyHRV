@@ -41,8 +41,8 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     clean_ecg, ecg_peaks = physio_piezo.compute_ecg(ecg, sf)
 
     downsample = {}
-    factor = int(sf // ds_freq)
     if ds_freq and ds_freq < sf:
+        factor = int(sf // ds_freq)
         time_d = time[::factor]# downsample_signal(time, sf, ds_freq)
         resp_d = resp[::factor] # downsample_signal(resp, sf, ds_freq)
         clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
