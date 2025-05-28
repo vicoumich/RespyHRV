@@ -1,12 +1,23 @@
 import plotly.graph_objects as go
 
+################################################
+# Voir si j'utilise go.Scattergl ou go.Scatter #
+################################################
+
+
+
+# go.Scattergl lague énormément quand sampling rate > 256
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
-               title="Cycles respiratoires") -> go.Figure:
+               title="Cycles respiratoires", is_ds=False) -> go.Figure:
     fig=go.Figure()
+
+    # Ajustement en type somme car bug de Scattergl si trop de points ( > 256)
+    scatter_object = go.Scattergl if is_ds else go.Scatter
+
     if not(init_signal is None):
         # Courbe originale (bleu)
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time,
             y=init_signal,
             mode="lines",
@@ -16,7 +27,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     
     if not(process_signal is None):
         # Courbe traitée (orange)
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time,
             y=process_signal,
             mode="lines",
@@ -26,7 +37,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
 
     if not(cycles is None):
         # Minima (creux) en vert
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time[cycles[:, 0]],
             y=process_signal[cycles[:, 0]],
             mode='markers',
@@ -35,7 +46,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
         ))
 
         # Maxima (pics) en rouge
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time[cycles[:, 1]],
             y=process_signal[cycles[:, 1]],
             mode='markers',
@@ -44,7 +55,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
         ))
     
     if not(ecg2 is None):
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time,
             y=ecg2,
             mode='lines',
@@ -53,7 +64,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
         ))
     
     if not(clean_ecg2 is None):
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time,
             y=clean_ecg2,
             mode='lines',
@@ -64,7 +75,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     if not(r_spikes is None):
         # Dessine en priorité les points de l'ecg avant nettoyage
         y = ecg2[r_spikes] if not(ecg2 is None) else clean_ecg2[r_spikes]
-        fig.add_trace(go.Scatter(
+        fig.add_trace(scatter_object(
             x=time[r_spikes],
             y=y,
             mode='markers',
@@ -85,3 +96,10 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     margin=dict(l=40, r=20, t=50, b=40)
     )
     return fig
+
+def normalize():
+    """
+    Normalize data and add différence to plot différent signals on
+    a same plotly properly (eg. resp and ecg)
+    """
+    

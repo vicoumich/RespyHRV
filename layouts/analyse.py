@@ -31,7 +31,7 @@ def get_layout():
         fig = modules.ploting.build_fig(data['downsample'][f'time_{ds_freq_i}'], 
                                         data['downsample'][f'resp_{ds_freq_i}'], 
                                         data['downsample'][f'clean_resp_{ds_freq_i}'],
-                                        data['downsample'][f'cycles_{ds_freq_i}'])
+                                        data['downsample'][f'cycles_{ds_freq_i}'], is_ds=True)
     else: 
         fig = modules.ploting.build_fig(data['time'], data['resp'], data['clean_resp'], data['cycles'])
 
