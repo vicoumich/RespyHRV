@@ -22,7 +22,7 @@ def get_layout():
 
     # Fréquence de down Sample entrée dans la GUI
     ds_freq   = float(session_info['ds_freq']) if session_info['ds_freq'] != 'None' else None
-    ds_freq_i = int(ds_freq)
+    ds_freq_i = int(ds_freq) if not(ds_freq is None ) else None
     
     data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
     
