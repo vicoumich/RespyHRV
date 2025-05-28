@@ -28,10 +28,12 @@ def get_layout():
     
     # Affichage downsamplé ou non en fonction de l'attribut sélectionné sur la GUI
     if ds_freq != None:
-        fig = modules.ploting.build_fig(data['downsample'][f'time_{ds_freq_i}'], 
+        fig = modules.ploting.normalised_ecg_resp_plot(data['downsample'][f'time_{ds_freq_i}'], # modules.ploting.build_fig
                                         data['downsample'][f'resp_{ds_freq_i}'], 
                                         data['downsample'][f'clean_resp_{ds_freq_i}'],
-                                        data['downsample'][f'cycles_{ds_freq_i}'], is_ds=True)
+                                        data['downsample'][f'cycles_{ds_freq_i}'],
+                                        data['downsample'][f'ecg_{ds_freq_i}'],
+                                        data['downsample'][f'clean_ecg_{ds_freq_i}'], is_ds=True)
     else: 
         fig = modules.ploting.build_fig(data['time'], data['resp'], data['clean_resp'], data['cycles'])
 

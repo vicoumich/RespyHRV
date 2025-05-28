@@ -1,5 +1,5 @@
 import plotly.graph_objects as go
-
+import numpy as np
 ################################################
 # Voir si j'utilise go.Scattergl ou go.Scatter #
 ################################################
@@ -97,9 +97,26 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     )
     return fig
 
-def normalize():
+def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
+                             cycles=None, ecg=None, processed_ecg=None, is_ds=True):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
     """
+
+    if not(resp is None):
+        resp = 2* ((resp - np.min(resp)) / (np.max(resp) - np.min(resp))) - 2
     
+    if not(processed_resp is None):
+        processed_resp = 2* ((processed_resp - np.min(processed_resp)) / (np.max(processed_resp) - np.min(processed_resp))) - 2
+
+    if not(ecg is None):
+        ecg = 2* ((ecg - np.min(ecg)) / (np.max(ecg) - np.min(ecg)))
+
+    if not(processed_ecg is None):
+        processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
+
+    return build_fig(time, resp, processed_resp, cycles, 
+              ecg, processed_ecg, title="Respiration et ECG traités", is_ds=is_ds)
+
+
