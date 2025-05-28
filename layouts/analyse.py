@@ -19,13 +19,21 @@ def get_layout():
     
     selected_channels = session_info['selected_channels']
     file_path = session_info['last_file']
-    
-    data = modules.bdf_reader.extract_signals(file_path, selected_channels)
 
-    # debug
-    # to_print = ['resp', 'status', 'clean_resp', 'time']
-    # printing = [f"key: {k}, value: {len(data[k])}" for k in to_print]
-    # fin debug
-    fig = modules.ploting.build_fig(data['time'], data['resp'], data['clean_resp'], data['cycles'])
+    # Fréquence de down Sample entrée dans la GUI
+    ds_freq   = float(session_info['ds_freq']) if session_info['ds_freq'] != 'None' else None
+    ds_freq_i = int(ds_freq)
+    
+    data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
+    
+    # Affichage downsamplé ou non en fonction de l'attribut sélectionné sur la GUI
+    if ds_freq != None:
+        fig = modules.ploting.build_fig(data['downsample'][f'time_{ds_freq_i}'], 
+                                        data['downsample'][f'resp_{ds_freq_i}'], 
+                                        data['downsample'][f'clean_resp_{ds_freq_i}'],
+                                        data['downsample'][f'cycles_{ds_freq_i}'])
+    else: 
+        fig = modules.ploting.build_fig(data['time'], data['resp'], data['clean_resp'], data['cycles'])
+
     return  dcc.Graph(figure=fig) # html.Div(f"channels select:{printing} ")
     

@@ -11,9 +11,10 @@ def register_callbacks(app):
         State('ecg-dropdown', 'value'),
         State('resp-dropdown', 'value'),
         State('status-dropdown', 'value'),
+        State('downsampling-dropdown', 'value'),
         prevent_initial_call=True
     )
-    def on_validate(n_clicks, ecg, resp, status):
+    def on_validate(n_clicks, ecg, resp, status, ds_freq):
         # debug
         # print(" Fichier traité:", UPLOAD_TRACKER['last_file'])
         # print(" ECG:", ecg)
@@ -29,6 +30,7 @@ def register_callbacks(app):
         channels['respi'] = resp
         channels['status'] = status
         UPLOAD_TRACKER['selected_channels'] = channels
+        UPLOAD_TRACKER['ds_freq'] = float(ds_freq) if ds_freq != None else 'None'
 
         # Ajout des channels selectionnées dans le json session
         with open(session_path, 'w') as json_file:

@@ -1,6 +1,7 @@
 from mne.io import read_raw_bdf
 import physio_piezo
 import numpy as np
+from modules.downsampling import downsample_signal
 
 def extract_channels(file_name):
     bdf = read_raw_bdf(file_name)
@@ -11,7 +12,7 @@ def process_resp(signal, sf: float):
     signal = physio_piezo.smooth_signal(signal, sf)
     return signal
 
-def extract_signals(file_name: str, channels: dict):
+def extract_signals(file_name: str, channels: dict, ds_freq=None):
     """
     Returns ecg, respi, processed respi, sampling rate,
     status and time in seconde.
@@ -39,6 +40,26 @@ def extract_signals(file_name: str, channels: dict):
     cycles = physio_piezo.respiration.detect_cycles_by_extrema(clean_resp, sf, 2.5)
     clean_ecg, ecg_peaks = physio_piezo.compute_ecg(ecg, sf)
 
+    downsample = {}
+    factor = int(sf // ds_freq)
+    if ds_freq and ds_freq < sf:
+        time_d = time[::factor]# downsample_signal(time, sf, ds_freq)
+        resp_d = resp[::factor] # downsample_signal(resp, sf, ds_freq)
+        clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
+        ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
+        clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
+        cycles_d = (cycles // factor).astype(np.int64)
+        # status = downsample_signal(status, sf, ds_freq)
+        # sf = ds_freq
+        ds_freq_i = int(ds_freq)
+        downsample = {
+            f'resp_{ds_freq_i}': resp_d,
+            f'time_{ds_freq_i}': time_d,
+            f'clean_resp_{ds_freq_i}': clean_resp_d,
+            f'ecg_{ds_freq_i}': ecg_d,
+            f'clean_ecg_{ds_freq_i}': clean_ecg_d,
+            f'cycles_{ds_freq_i}': cycles_d
+        }
 
     return {
         'resp': resp,
@@ -49,7 +70,8 @@ def extract_signals(file_name: str, channels: dict):
         'sf': sf,
         'ecg': ecg,
         'clean_ecg': clean_ecg,
-        'ecg_peaks': ecg_peaks
+        'ecg_peaks': ecg_peaks,
+        'downsample': downsample
     }
 
     
