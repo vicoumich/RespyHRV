@@ -15,7 +15,7 @@ def get_layout():
     if os.path.exists(session_path):
         with open(session_path, 'r') as session:
             session_info = json.load(session)
-    else: return html.Div([html.H1(f"Aucun fichier session trouvé dans {session_path}")])
+    else: return html.Div([html.H1(f"Aucun fichier session trouvé")])
     
     selected_channels = session_info['selected_channels']
     file_path = session_info['last_file']
@@ -35,5 +35,5 @@ def get_layout():
     else: 
         fig = modules.ploting.build_fig(data['time'], data['resp'], data['clean_resp'], data['cycles'])
 
-    return  dcc.Graph(figure=fig) # html.Div(f"channels select:{printing} ")
+    return  html.Div(dcc.Graph(figure=fig), id="modif-cycles-plot") # html.Div(f"channels select:{printing} ")
     
