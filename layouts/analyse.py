@@ -37,5 +37,18 @@ def get_layout():
     else: 
         fig = modules.ploting.build_fig(data['time'], data['resp'], data['clean_resp'], data['cycles'])
 
-    return  html.Div(dcc.Graph(figure=fig), id="modif-cycles-plot") # html.Div(f"channels select:{printing} ")
+    trace_names = [trace.name for trace in fig.data]
+
+    return html.Div([
+        html.H2("Visualisation du signal"),
+        # Checklist qui va contrôler la visibilité
+        dcc.Checklist(
+            id='signal-toggle',
+            options=[{'label': name, 'value': name} for name in trace_names],
+            value=trace_names,    # coché par défaut
+            inline=True,
+            inputStyle={"margin-right": "5px", "margin-left": "20px"}
+        ),
+        dcc.Graph(id='analysis-graph', figure=fig)
+    ])
     
