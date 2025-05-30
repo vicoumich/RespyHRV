@@ -46,7 +46,7 @@ def get_layout():
 
         html.Br(),
 
-        html.Label("DownSampling :"),
+        html.Label("DownSampling (dépend du contexte des données, ≤256 recommandé):"),
         dcc.Dropdown(
             id='downsampling-dropdown',
             options=[{'label': ds_freq, 'value': ds_freq} for ds_freq in ds_freqs],
