@@ -41,6 +41,9 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     #     'end': status[70][1]    
     # }
 
+    # Micro
+    micro = bdf[channels['micro']][0].ravel()
+
     # Nettoyage des artefactes dans la resp (signal smoothing en gros)
     clean_resp = process_resp(resp.copy(), sf)
 
@@ -59,6 +62,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
         ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
         clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
+        micro_d = micro[::factor] 
         cycles_d = (cycles // factor).astype(np.int64)
         ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
         status_d = { k: [int(i // factor) for i in v] for k,v in status.items()}
@@ -73,7 +77,8 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
             f'clean_ecg_{ds_freq_i}': clean_ecg_d,
             f'cycles_{ds_freq_i}': cycles_d,
             f'ecg_peaks_{ds_freq_i}': ecg_peaks_d,
-            f'status_{ds_freq_i}': status_d
+            f'status_{ds_freq_i}': status_d,
+            f'micro_{ds_freq_i}': micro_d
         }
 
     return {
@@ -86,6 +91,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         'ecg': ecg,
         'clean_ecg': clean_ecg,
         'ecg_peaks': ecg_peaks,
+        'micro': micro,
         'downsample': downsample
     }
 

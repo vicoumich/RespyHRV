@@ -36,12 +36,14 @@ def get_layout():
                                         data['downsample'][f'clean_ecg_{ds_freq_i}'],
                                         data['downsample'][f'ecg_peaks_{ds_freq_i}'],
                                         data['downsample'][f'status_{ds_freq_i}'],
+                                        micro=data['downsample'][f'micro_{ds_freq_i}'],
                                         is_ds=True)
         # print(data[f'ecg_peaks'])
     else: 
         fig = modules.ploting.normalised_ecg_resp_plot(data['time'], data['resp'], 
                                         data['clean_resp'], data['cycles'], data['ecg'],
-                                        data['clean_ecg'], data['ecg_peaks'], data['status'], is_ds=False)
+                                        data['clean_ecg'], data['ecg_peaks'], data['status'],
+                                        micro=data['micro'], is_ds=False)
 
     trace_names = [trace.name for trace in fig.data]
 

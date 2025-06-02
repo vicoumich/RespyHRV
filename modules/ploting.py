@@ -9,7 +9,7 @@ import numpy as np
 # go.Scattergl lague énormément quand sampling rate > 256
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
-               title="Cycles respiratoires", is_ds=False, status=None) -> go.Figure:
+               title="Cycles respiratoires", is_ds=False, status=None, micro=None) -> go.Figure:
     # status_labels = ['start', 'end', 'start_stress', 'end_stress', 'start_stress_50']
     fig=go.Figure()
 
@@ -106,6 +106,15 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             marker=dict(color='black')
         ))
 
+    if not(micro is None):
+        # Courbe originale (bleu)
+        fig.add_trace(scatter_object(
+            x=time,
+            y=micro,
+            mode="lines",
+            name="micro",
+            line=dict(color="black")
+        ))
     # Mise en page
     fig.update_layout(
     title=title,
@@ -122,7 +131,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
 
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
                              cycles=None, ecg=None, processed_ecg=None,
-                             r_spikes=None, status=None, is_ds=True):
+                             r_spikes=None, status=None, micro=None, is_ds=True):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
@@ -140,8 +149,11 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
     if not(processed_ecg is None):
         processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
 
+    if not(micro is None):
+        micro = 2* ((micro - np.min(micro)) / (np.max(micro) - np.min(micro))) - 4
+
     return build_fig(time, resp, processed_resp, cycles, 
               ecg, processed_ecg, r_spikes['peak_index'], 
-              title="Respiration et ECG traités", status=status, is_ds=is_ds)
+              title="Respiration et ECG traités", status=status, is_ds=is_ds, micro=micro)
 
 
