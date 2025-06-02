@@ -49,6 +49,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
         clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
         cycles_d = (cycles // factor).astype(np.int64)
+        ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
         # status = downsample_signal(status, sf, ds_freq)
         # sf = ds_freq
         ds_freq_i = int(ds_freq)
@@ -58,7 +59,8 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
             f'clean_resp_{ds_freq_i}': clean_resp_d,
             f'ecg_{ds_freq_i}': ecg_d,
             f'clean_ecg_{ds_freq_i}': clean_ecg_d,
-            f'cycles_{ds_freq_i}': cycles_d
+            f'cycles_{ds_freq_i}': cycles_d,
+            f'ecg_peaks_{ds_freq_i}': ecg_peaks_d
         }
 
     return {

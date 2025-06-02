@@ -98,7 +98,8 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     return fig
 
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
-                             cycles=None, ecg=None, processed_ecg=None, is_ds=True):
+                             cycles=None, ecg=None, processed_ecg=None,
+                             r_spikes=None, is_ds=True):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
@@ -117,6 +118,6 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
         processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
 
     return build_fig(time, resp, processed_resp, cycles, 
-              ecg, processed_ecg, title="Respiration et ECG traités", is_ds=is_ds)
+              ecg, processed_ecg, r_spikes['peak_index'], title="Respiration et ECG traités", is_ds=is_ds)
 
 
