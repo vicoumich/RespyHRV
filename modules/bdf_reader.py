@@ -28,7 +28,18 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
 
     # Extraction des variables bruts du bdf
     resp = bdf[channels['respi']][0].ravel()
+    
+    # Calcul des timestamps de stress
     status = bdf[channels['status']][0].ravel()
+    status = extract_timestamps(status, sf, precise_complete=1)
+    # Pas de label précis, juste des débuts et des fins 
+    # status = {
+    #     'start': status[50][0],
+    #     'start_stress_50': status[50][1],
+    #     'start_stress': status[70][0],
+    #     'end_stress': status[50][2],
+    #     'end': status[70][1]    
+    # }
 
     # Nettoyage des artefactes dans la resp (signal smoothing en gros)
     clean_resp = process_resp(resp.copy(), sf)
@@ -50,6 +61,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
         cycles_d = (cycles // factor).astype(np.int64)
         ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
+        status_d = { k: [int(i // factor) for i in v] for k,v in status.items()}
         # status = downsample_signal(status, sf, ds_freq)
         # sf = ds_freq
         ds_freq_i = int(ds_freq)
@@ -60,7 +72,8 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
             f'ecg_{ds_freq_i}': ecg_d,
             f'clean_ecg_{ds_freq_i}': clean_ecg_d,
             f'cycles_{ds_freq_i}': cycles_d,
-            f'ecg_peaks_{ds_freq_i}': ecg_peaks_d
+            f'ecg_peaks_{ds_freq_i}': ecg_peaks_d,
+            f'status_{ds_freq_i}': status_d
         }
 
     return {
@@ -76,4 +89,37 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         'downsample': downsample
     }
 
+
+def extract_timestamps(status, sfreq, target_values=(50, 70), precise_complete=None):
+    """
+    Renvoie les indexs où le signal status devient une des target_values
+    dans le vecteur status.
+
+    Args:
+        status (np.ndarray): signal de statut (entiers)
+        target_values (tuple): valeurs à détecter
+
+    Returns:
+        dict: {valeur: [indexes]}
+    """
+    timestamps = {val: [] for val in target_values}
+    #debug
+    # print("\n\n",timestamps)
+    # Trouver les indices ou la valeur change
+    changes = np.where(np.diff(status) != 0)[0] + 1
     
+    # Pour chaque changement, tester si la nouvelle valeur est 50 ou 70
+    for idx in changes:
+        val = status[idx]
+        if val in target_values:
+            timestamps[val].append(int(idx))
+    #debug
+    # print("\n\n",timestamps)
+    # Pour les échantillons de sabrina précisémment
+    # Ajout d'un 70 manquant 
+    if not(precise_complete is None):
+        timestamps[70] = list((int(timestamps[70][0]), 
+                               int(timestamps[50][2] - 20 * sfreq),
+                               int(timestamps[70][-1])))
+    
+    return timestamps

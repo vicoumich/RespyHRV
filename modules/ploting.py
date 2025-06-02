@@ -9,11 +9,34 @@ import numpy as np
 # go.Scattergl lague énormément quand sampling rate > 256
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
-               title="Cycles respiratoires", is_ds=False) -> go.Figure:
+               title="Cycles respiratoires", is_ds=False, status=None) -> go.Figure:
+    # status_labels = ['start', 'end', 'start_stress', 'end_stress', 'start_stress_50']
     fig=go.Figure()
 
     # Ajustement en type somme car bug de Scattergl si trop de points ( > 256)
     scatter_object = go.Scattergl if is_ds else go.Scatter
+
+    if not(status is None):
+        # checked = set(list(status.keys())).issubset(set(status_labels))
+        # if checked:
+            # fig.add_vline(x=time[status['start']], annotation_text="Début enregistrement", 
+            # annotation_position="bottom right")
+            # fig.add_vline(x=time[status['start_stress_50']], annotation_text="50", 
+            #     annotation_position="bottom right")
+            # fig.add_vline(x=time[status['start_stress']], annotation_text="Début stress", 
+            #     annotation_position="bottom right")
+            # fig.add_vline(x=time[status['end_stress']], annotation_text="Fin stress", 
+            #     annotation_position="bottom right")
+            # fig.add_vline(x=time[status['end']], annotation_text="Fin enregistrement", 
+            #     annotation_position="bottom right")
+        # print(status)
+        for i in range(len(status[50])):
+            label_title = "stress" if (i % 2) != 0 else "repos"
+            fig.add_vline(x=time[status[50][i]], annotation_text=f"Début {label_title}", 
+                annotation_position="bottom right")
+            fig.add_vline(x=time[status[70][i]], annotation_text=f"Fin {label_title}", 
+                annotation_position="bottom left")
+        
 
     if not(init_signal is None):
         # Courbe originale (bleu)
@@ -87,19 +110,19 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     fig.update_layout(
     title=title,
     xaxis=dict(
-        title="Temps (s)",
-        type="linear",
-        rangeslider=dict(visible=True),
-    ),
-    yaxis=dict(title="Amplitude"),
-    height=400,
-    margin=dict(l=40, r=20, t=50, b=40)
+            title="Temps (s)",
+            type="linear",
+            rangeslider=dict(visible=True),
+        ),
+        yaxis=dict(title="Amplitude"),
+        height=500,
+        margin=dict(l=40, r=20, t=50, b=40)
     )
     return fig
 
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
                              cycles=None, ecg=None, processed_ecg=None,
-                             r_spikes=None, is_ds=True):
+                             r_spikes=None, status=None, is_ds=True):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
@@ -118,6 +141,7 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
         processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
 
     return build_fig(time, resp, processed_resp, cycles, 
-              ecg, processed_ecg, r_spikes['peak_index'], title="Respiration et ECG traités", is_ds=is_ds)
+              ecg, processed_ecg, r_spikes['peak_index'], 
+              title="Respiration et ECG traités", status=status, is_ds=is_ds)
 
 
