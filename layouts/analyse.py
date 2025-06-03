@@ -22,21 +22,21 @@ def get_layout():
 
     # Fréquence de down Sample entrée dans la GUI
     ds_freq   = float(session_info['ds_freq']) if session_info['ds_freq'] != 'None' else None
-    ds_freq_i = int(ds_freq) if not(ds_freq is None ) else None
+    # ds_freq_i = int(ds_freq) if not(ds_freq is None ) else None
     
     data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
     
     # Affichage downsamplé ou non en fonction de l'attribut sélectionné sur la GUI
     if ds_freq != None:
-        fig = modules.ploting.normalised_ecg_resp_plot(data['downsample'][f'time_{ds_freq_i}'], # modules.ploting.build_fig
-                                        data['downsample'][f'resp_{ds_freq_i}'], 
-                                        data['downsample'][f'clean_resp_{ds_freq_i}'],
-                                        data['downsample'][f'cycles_{ds_freq_i}'],
-                                        data['downsample'][f'ecg_{ds_freq_i}'],
-                                        data['downsample'][f'clean_ecg_{ds_freq_i}'],
-                                        data['downsample'][f'ecg_peaks_{ds_freq_i}'],
-                                        data['downsample'][f'status_{ds_freq_i}'],
-                                        micro=data['downsample'][f'micro_{ds_freq_i}'],
+        fig = modules.ploting.normalised_ecg_resp_plot(data['downsample'][f'time_d'], # modules.ploting.build_fig
+                                        data['downsample'][f'resp_d'], 
+                                        data['downsample'][f'clean_resp_d'],
+                                        data['downsample'][f'cycles_d'],
+                                        data['downsample'][f'ecg_d'],
+                                        data['downsample'][f'clean_ecg_d'],
+                                        data['downsample'][f'ecg_peaks_d'],
+                                        data['downsample'][f'status_d'],
+                                        micro=data['downsample'][f'micro_d'],
                                         is_ds=True)
         # print(data[f'ecg_peaks'])
     else: 

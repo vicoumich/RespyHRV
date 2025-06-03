@@ -68,17 +68,17 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         status_d = { k: [int(i // factor) for i in v] for k,v in status.items()}
         # status = downsample_signal(status, sf, ds_freq)
         # sf = ds_freq
-        ds_freq_i = int(ds_freq)
+        # ds_freq_i = int(ds_freq)
         downsample = {
-            f'resp_{ds_freq_i}': resp_d,
-            f'time_{ds_freq_i}': time_d,
-            f'clean_resp_{ds_freq_i}': clean_resp_d,
-            f'ecg_{ds_freq_i}': ecg_d,
-            f'clean_ecg_{ds_freq_i}': clean_ecg_d,
-            f'cycles_{ds_freq_i}': cycles_d,
-            f'ecg_peaks_{ds_freq_i}': ecg_peaks_d,
-            f'status_{ds_freq_i}': status_d,
-            f'micro_{ds_freq_i}': micro_d
+            f'resp_d': resp_d,
+            f'time_d': time_d,
+            f'clean_resp_d': clean_resp_d,
+            f'ecg_d': ecg_d,
+            f'clean_ecg_d': clean_ecg_d,
+            f'cycles_d': cycles_d,
+            f'ecg_peaks_d': ecg_peaks_d,
+            f'status_d': status_d,
+            f'micro_d': micro_d
         }
 
     return {
