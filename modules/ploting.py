@@ -117,15 +117,18 @@ def build_fig(time=None, init_signal=None, process_signal=None,
         ))
     # Mise en page
     fig.update_layout(
-    title=title,
-    xaxis=dict(
+        title=title,
+        xaxis=dict(
             title="Temps (s)",
             type="linear",
             rangeslider=dict(visible=True),
         ),
-        yaxis=dict(title="Amplitude"),
+        yaxis=dict(title="Amplitude", 
+                   fixedrange=False
+        ),
         height=500,
-        margin=dict(l=40, r=20, t=50, b=40)
+        margin=dict(l=40, r=20, t=50, b=40),
+        dragmode="zoom"
     )
     return fig
 
