@@ -45,7 +45,7 @@ def get_layout():
                                         data['clean_ecg'], data['ecg_peaks'], data['status'],
                                         micro=data['micro'], is_ds=False)
 
-    trace_names = [trace.name for trace in fig.data]
+    # trace_names = [trace.name for trace in fig.data]
 
     # Sauvegarde des données calcul et visu de l'asr
     _save_for_asr(channels=data)
@@ -53,17 +53,17 @@ def get_layout():
     return html.Div([
         html.H2("Visualisation du signal"),
         # Checklist qui va contrôler la visibilité
-        dcc.Checklist(
-            id='signal-toggle',
-            options=[{'label': name, 'value': name} for name in trace_names],
-            value=trace_names,    # coché par défaut
-            inline=True,
-            inputStyle={"margin-right": "5px", "margin-left": "20px"}
-        ),
+        # dcc.Checklist(
+        #     id='signal-toggle',
+        #     options=[{'label': name, 'value': name} for name in trace_names],
+        #     value=trace_names,    # coché par défaut
+        #     inline=True,
+        #     inputStyle={"margin-right": "5px", "margin-left": "20px"}
+        # ),
         dcc.Graph(id='analysis-graph', figure=fig)
     ])
     
-    
+
 def _save_for_asr(channels, folder=analysis_path):
     for name in useful_channel_asr:
         signal = channels[name] if name[-2:] != '_d' else channels['downsample'][name]

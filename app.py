@@ -15,7 +15,7 @@ app.layout = html.Div([
 home_callbacks.register_callbacks(app)
 routing_callbacks.register_callbacks(app)
 select_callbacks.register_callbacks(app)
-analyse_callbacks.register_callbacks(app)
+# analyse_callbacks.register_callbacks(app)
 
 if __name__ == '__main__':
     app.run(debug=True)  
