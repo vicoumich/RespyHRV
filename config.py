@@ -1,11 +1,19 @@
 import os
 
+# Cannaux à garder pour le calcul et la visualiisation de l'ASR
+# après le nettoyage manuel des cycles
+useful_channel_asr = ["clean_ecg_d", "clean_resp_d", "cycles",
+                       "ecg_peaks", 'cycles_d', 'ecg_peaks_d']
+
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 ALLOWED_EXTENSIONS = {'bdf'}
-session_path = os.path.join(os.path.join(os.getcwd(), 'session'), 'session.json')
+CURRENT_FOLDER = os.getcwd()
+session_path = os.path.join(os.path.join(CURRENT_FOLDER, 'session'), 'session.json')
+analysis_path = os.path.join(CURRENT_FOLDER, 'analysis')
 
 # Ensure the folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(analysis_path, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

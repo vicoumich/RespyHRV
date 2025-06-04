@@ -4,7 +4,7 @@ import os
 import modules.bdf_reader
 import modules.ploting
 import numpy as np
-from config import session_path
+from config import session_path, analysis_path, useful_channel_asr
 
 
 def get_layout():
@@ -47,6 +47,9 @@ def get_layout():
 
     trace_names = [trace.name for trace in fig.data]
 
+    # Sauvegarde des données calcul et visu de l'asr
+    _save_for_asr(channels=data)
+
     return html.Div([
         html.H2("Visualisation du signal"),
         # Checklist qui va contrôler la visibilité
@@ -60,3 +63,8 @@ def get_layout():
         dcc.Graph(id='analysis-graph', figure=fig)
     ])
     
+    
+def _save_for_asr(channels, folder=analysis_path):
+    for name in useful_channel_asr:
+        signal = channels[name] if name[-2:] != '_d' else channels['downsample'][name]
+        np.save(os.path.join(folder, f'{name}.npy'), signal, allow_pickle=False)

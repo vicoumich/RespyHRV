@@ -97,7 +97,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     
     if not(r_spikes is None):
         # Dessine en priorité les points de l'ecg avant nettoyage
-        y = ecg2[r_spikes] if not(ecg2 is None) else clean_ecg2[r_spikes]
+        y = clean_ecg2[r_spikes]# ecg2[r_spikes] if not(ecg2 is None) else clean_ecg2[r_spikes]
         fig.add_trace(scatter_object(
             x=time[r_spikes],
             y=y,
