@@ -4,6 +4,7 @@ import os
 import modules.bdf_reader
 import modules.ploting
 import numpy as np
+import pandas as pd
 from config import session_path, analysis_path, useful_channel_asr
 
 
@@ -66,6 +67,18 @@ def get_layout():
     
 
 def _save_for_asr(channels, folder=analysis_path):
+
+    # Supression des cycles dans car sauvegardés en .pkl et non .npy
+    cycles = channels.pop('cycles')
+
+    # Calculs des features des cycles
+    cycles = modules.bdf_reader.get_cycles_features(
+        channels['clean_resp'],
+        channels['sf'],
+        cycles
+    )
+    cycles.to_pickle(os.path.join(folder, f'cycles.pkl'))
+    
     for name in useful_channel_asr:
         signal = channels[name] if name[-2:] != '_d' else channels['downsample'][name]
         np.save(os.path.join(folder, f'{name}.npy'), signal, allow_pickle=False)

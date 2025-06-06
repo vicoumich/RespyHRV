@@ -129,3 +129,6 @@ def extract_timestamps(status, sfreq, target_values=(50, 70), precise_complete=N
                                int(timestamps[70][-1])))
     
     return timestamps
+
+def get_cycles_features(resp, srate, cycles, baseline=0.0):
+    return physio_piezo.respiration.compute_respiration_cycle_features(resp, srate, cycles, baseline)

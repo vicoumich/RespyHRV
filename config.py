@@ -2,7 +2,7 @@ import os
 
 # Cannaux à garder pour le calcul et la visualiisation de l'ASR
 # après le nettoyage manuel des cycles
-useful_channel_asr = ["clean_ecg_d", "clean_resp_d", "cycles",
+useful_channel_asr = ["clean_ecg_d", "clean_resp_d",
                        "ecg_peaks", 'cycles_d', 'ecg_peaks_d']
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
