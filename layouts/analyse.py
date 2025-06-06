@@ -60,7 +60,8 @@ def get_layout():
         #     inline=True,
         #     inputStyle={"margin-right": "5px", "margin-left": "20px"}
         # ),
-        dcc.Graph(id='analysis-graph', figure=fig)
+        dcc.Graph(id='analysis-graph', figure=fig),
+        html.Button('Valider modifications', id='btn-submit')
     ])
     
 

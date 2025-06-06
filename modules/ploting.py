@@ -9,7 +9,8 @@ import numpy as np
 # go.Scattergl lague énormément quand sampling rate > 256
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
-               title="Cycles respiratoires", is_ds=False, status=None, micro=None) -> go.Figure:
+               title="Cycles respiratoires", is_ds=False, status=None, 
+               micro=None, asr=None, time_asr=None) -> go.Figure:
     # status_labels = ['start', 'end', 'start_stress', 'end_stress', 'start_stress_50']
     fig=go.Figure()
 
@@ -37,7 +38,6 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             fig.add_vline(x=time[status[70][i]], annotation_text=f"Fin {label_title}", 
                 annotation_position="bottom left")
         
-
     if not(init_signal is None):
         # Courbe originale (bleu)
         fig.add_trace(scatter_object(
@@ -45,7 +45,8 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             y=init_signal,
             mode="lines",
             name="Respiration brute",
-            line=dict(color="blue")
+            line=dict(color="blue"),
+            # hoverinfo='skip'
         ))
     
     if not(process_signal is None):
@@ -55,7 +56,8 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             y=process_signal,
             mode="lines",
             name="Respiration traitée",
-            line=dict(color="orange")
+            line=dict(color="orange"),
+            # hoverinfo='skip'
         ))
 
     if not(cycles is None):
@@ -65,7 +67,9 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             y=process_signal[cycles[:, 0]],
             mode='markers',
             name='Minima (inspiration)',
-            marker=dict(color='green', size=6, symbol='circle')
+            marker=dict(color='green', size=6, symbol='circle'),
+            # hoverinfo='text',  # émet l’infobulle pour ce point
+            # hovertext=['Minima à {:.2f}s'.format(time[i]) for i in cycles[:,0]]
         ))
 
         # Maxima (pics) en rouge
@@ -74,7 +78,9 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             y=process_signal[cycles[:, 1]],
             mode='markers',
             name='Maxima (expiration)',
-            marker=dict(color='red', size=6, symbol='circle')
+            marker=dict(color='red', size=6, symbol='circle'),
+            # hoverinfo='text',  # émet l’infobulle pour ce point
+            # hovertext=['Minima à {:.2f}s'.format(time[i]) for i in cycles[:,1]]
         ))
     
     if not(ecg2 is None):
@@ -115,6 +121,18 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             name="micro",
             line=dict(color="black")
         ))
+    ########################################
+    ## CHANGER NOM EN FREQUENCE CARDIAQUE ##
+    ########################################
+    if not(asr is None ) and not(time_asr is None):
+        fig.add_trace(scatter_object(
+            x=time_asr,
+            y=asr,
+            mode='lines',
+            name='Fréquence cardiaque instantanée',
+            line=dict(color="green")
+        ))
+
     # Mise en page
     fig.update_layout(
         title=title,
@@ -134,7 +152,8 @@ def build_fig(time=None, init_signal=None, process_signal=None,
 
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
                              cycles=None, ecg=None, processed_ecg=None,
-                             r_spikes=None, status=None, micro=None, is_ds=True):
+                             r_spikes=None, status=None, micro=None, is_ds=True,
+                             asr=None, time_asr=None):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
@@ -153,10 +172,16 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
         processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
 
     if not(micro is None):
-        micro = 2* ((micro - np.min(micro)) / (np.max(micro) - np.min(micro))) - 4
+        beta = 4 if not asr or not time_asr else 6
+        micro = 2* ((micro - np.min(micro)) / (np.max(micro) - np.min(micro))) - beta
+    
+    if not(asr is None) and not(time_asr is None):
+        asr = 2* ((asr - np.min(asr)) / (np.max(asr) - np.min(micro))) - 4
+
 
     return build_fig(time, resp, processed_resp, cycles, 
               ecg, processed_ecg, r_spikes['peak_index'], 
-              title="Respiration et ECG traités", status=status, is_ds=is_ds, micro=micro)
+              title="Respiration et ECG traités", status=status, is_ds=is_ds,
+              micro=micro, asr=asr, time_asr=time_asr)
 
 
