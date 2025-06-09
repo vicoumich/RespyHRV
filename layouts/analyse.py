@@ -26,19 +26,7 @@ def get_layout():
     # ds_freq_i = int(ds_freq) if not(ds_freq is None ) else None
     
     data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
-    
-    #################################################
-    ## A FAIRE DANS MODULES/ POUR BONNE SEPARATION ##
-    #################################################
-    # Calculs des features des cycles
-    # data["cycles"] = modules.bdf_reader.get_cycles_features(
-    #     data['clean_resp'],
-    #     data['sf'],
-    #     data["cycles"]
-    # )
-    
-        
-
+       
     # Affichage downsamplé ou non en fonction de l'attribut sélectionné sur la GUI
     if ds_freq != None:
         fig = modules.ploting.normalised_ecg_resp_plot(data['downsample'][f'time_d'], # modules.ploting.build_fig
@@ -73,6 +61,19 @@ def get_layout():
         #     inputStyle={"margin-right": "5px", "margin-left": "20px"}
         # ),
         dcc.Graph(id='analysis-graph', figure=fig),
+        dcc.RadioItems(
+            id='cleaning-mode',
+            options=[
+                {'label': 'Move', 'value': 'move'}, 
+                {'label': 'Delete', 'value': 'delete'},
+                {'label': 'Add', 'value': 'add'}
+            ],
+            inline=True
+        ),
+        html.Br(),
+        html.Div(children='Modification mode :'),
+        html.Div(id='mode-state', children='No active modification mode'),
+        html.Br(),
         html.Button('Valider modifications', id='btn-submit'),
         html.Div(id='channels-asr')
     ])

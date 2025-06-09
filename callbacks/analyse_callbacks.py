@@ -24,3 +24,13 @@ def register_callbacks(app):
     )
     def on_validate_cycles(n_clicks):
         print("clicked")
+
+    @app.callback(
+        Output('mode-state', 'children'),
+        Input('cleaning-mode', 'value'),
+    )
+    def on_choosing_mode(value):
+        print(value)
+        if not value:
+            return 'No active modification mode'
+        return value
