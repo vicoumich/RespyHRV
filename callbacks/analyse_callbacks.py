@@ -1,6 +1,7 @@
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 import plotly.graph_objects as go
-
+from config import analysis_path, useful_channel_asr
+import os
 # def register_callbacks(app):
 #     @app.callback(
 #         Output('analysis-graph', 'figure'),
@@ -15,3 +16,11 @@ import plotly.graph_objects as go
 #         for trace in fig["data"]:
 #             trace["visible"] = True if trace["name"] in selected_names else 'legendonly'
 #         return fig
+
+def register_callbacks(app):
+    @app.callback(
+        Output('channels-asr', 'children'),
+        Input('btn-submit', 'n_clicks')
+    )
+    def on_validate_cycles(n_clicks):
+        print("clicked")

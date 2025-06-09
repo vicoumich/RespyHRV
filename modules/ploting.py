@@ -10,7 +10,7 @@ import numpy as np
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
                title="Cycles respiratoires", is_ds=False, status=None, 
-               micro=None, asr=None, time_asr=None) -> go.Figure:
+               micro=None, bpm=None, time_bpm=None, cycles_on_bpm=True) -> go.Figure:
     # status_labels = ['start', 'end', 'start_stress', 'end_stress', 'start_stress_50']
     fig=go.Figure()
 
@@ -82,6 +82,26 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             # hoverinfo='text',  # émet l’infobulle pour ce point
             # hovertext=['Minima à {:.2f}s'.format(time[i]) for i in cycles[:,1]]
         ))
+
+        if cycles_on_bpm:
+            for i in cycles[:, 0]:  # Minima en vert
+                fig.add_shape(
+                    type='line',
+                    x0=time[i], x1=time[i],
+                    y0=0, y1=-4,
+                    line=dict(color='green', width=1),
+                    layer='below'
+                )
+                print(f"cycles {i} fait", end="\r")
+            for i in cycles[:, 1]:  # Maxima en rouge
+                fig.add_shape(
+                    type='line',
+                    x0=time[i], x1=time[i],
+                    y0=0, y1=-4,
+                    line=dict(color='red', width=1),
+                    layer='below'
+                )
+                print(f"cycles {i} fait", end="\r")
     
     if not(ecg2 is None):
         fig.add_trace(scatter_object(
@@ -124,10 +144,10 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     ########################################
     ## CHANGER NOM EN FREQUENCE CARDIAQUE ##
     ########################################
-    if not(asr is None ) and not(time_asr is None):
+    if not(bpm is None ) and not(time_bpm is None):
         fig.add_trace(scatter_object(
-            x=time_asr,
-            y=asr,
+            x=time_bpm,
+            y=bpm,
             mode='lines',
             name='Fréquence cardiaque instantanée',
             line=dict(color="green")
@@ -153,7 +173,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
                              cycles=None, ecg=None, processed_ecg=None,
                              r_spikes=None, status=None, micro=None, is_ds=True,
-                             asr=None, time_asr=None):
+                             bpm=None, time_bpm=None, cycles_on_bpm=True):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
@@ -172,16 +192,16 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
         processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
 
     if not(micro is None):
-        beta = 4 if not asr or not time_asr else 6
+        beta = 6 # if not bpm or not time_bpm else 6
         micro = 2* ((micro - np.min(micro)) / (np.max(micro) - np.min(micro))) - beta
     
-    if not(asr is None) and not(time_asr is None):
-        asr = 2* ((asr - np.min(asr)) / (np.max(asr) - np.min(micro))) - 4
+    if not(bpm is None) and not(time_bpm is None):
+        bpm = 2* ((bpm - np.min(bpm)) / (np.max(bpm) - np.min(bpm))) - 4
 
 
     return build_fig(time, resp, processed_resp, cycles, 
               ecg, processed_ecg, r_spikes['peak_index'], 
               title="Respiration et ECG traités", status=status, is_ds=is_ds,
-              micro=micro, asr=asr, time_asr=time_asr)
+              micro=micro, bpm=bpm, time_bpm=time_bpm, cycles_on_bpm=cycles_on_bpm)
 
 
