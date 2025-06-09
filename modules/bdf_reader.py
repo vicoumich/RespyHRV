@@ -54,6 +54,16 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     cycles = physio_piezo.respiration.detect_cycles_by_extrema(clean_resp, sf, 2.5)
     clean_ecg, ecg_peaks = physio_piezo.compute_ecg(ecg, sf)
 
+    cycles_features = get_cycles_features(clean_resp, sf, cycles)
+
+    # Calcul de la frequence cardiaque instantanéé
+    srate_bpm = 100.0 # Fréquence du nouveau signal bpm
+    time_bpm  = np.arange(0,  time[-1] + 1/srate_bpm, 1/srate_bpm) 
+    instant_bpm = physio_piezo.compute_instantaneous_rate(
+        ecg_peaks, time_bpm,
+        units='bpm', interpolation_kind='linear'
+    )
+
     downsample = {}
     if ds_freq and ds_freq < sf:
         factor = int(sf // ds_freq)
@@ -92,7 +102,10 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         'clean_ecg': clean_ecg,
         'ecg_peaks': ecg_peaks,
         'micro': micro,
-        'downsample': downsample
+        'cycles_features':cycles_features,
+        'time_bpm':time_bpm,
+        'instant_bpm': instant_bpm,
+        'downsample': downsample, 
     }
 
 

@@ -8,8 +8,9 @@ useful_channel_asr = ["clean_ecg_d", "clean_resp_d",
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 ALLOWED_EXTENSIONS = {'bdf'}
 CURRENT_FOLDER = os.getcwd()
-session_path = os.path.join(os.path.join(CURRENT_FOLDER, 'session'), 'session.json')
-analysis_path = os.path.join(CURRENT_FOLDER, 'analysis')
+SESSION_FOLDER = os.path.join(CURRENT_FOLDER, 'session')
+session_path = os.path.join(SESSION_FOLDER, 'session.json')
+analysis_path = os.path.join(SESSION_FOLDER, 'data')
 
 # Ensure the folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

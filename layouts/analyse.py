@@ -31,18 +31,12 @@ def get_layout():
     ## A FAIRE DANS MODULES/ POUR BONNE SEPARATION ##
     #################################################
     # Calculs des features des cycles
-    data["cycles"] = modules.bdf_reader.get_cycles_features(
-        data['clean_resp'],
-        data['sf'],
-        data["cycles"]
-    )
-    # Calcul de la frequence cardiaque instantanéé
-    srate_bpm = 100.0 # Fréquence du nouveau signal bpm
-    time_bpm  = np.arange(0,  data["time"][-1] + 1/srate_bpm, 1/srate_bpm) 
-    instant_bpm = modules.bdf_reader.physio_piezo.compute_instantaneous_rate(
-        data['ecg_peaks'], time_bpm,
-        units='bpm', interpolation_kind='linear'
-    )
+    # data["cycles"] = modules.bdf_reader.get_cycles_features(
+    #     data['clean_resp'],
+    #     data['sf'],
+    #     data["cycles"]
+    # )
+    
         
 
     # Affichage downsamplé ou non en fonction de l'attribut sélectionné sur la GUI
@@ -56,16 +50,14 @@ def get_layout():
                                         data['downsample'][f'ecg_peaks_d'],
                                         data['downsample'][f'status_d'],
                                         micro=data['downsample'][f'micro_d'],
-                                        is_ds=True, bpm=instant_bpm, time_bpm=time_bpm, cycles_on_bpm=False
+                                        is_ds=True, bpm=data['instant_bpm'], 
+                                        time_bpm=data['time_bpm'], cycles_on_bpm=False
                                         )
-        # print(data[f'ecg_peaks'])
     else: 
         fig = modules.ploting.normalised_ecg_resp_plot(data['time'], data['resp'], 
                                         data['clean_resp'], data['cycles'], data['ecg'],
                                         data['clean_ecg'], data['ecg_peaks'], data['status'],
                                         micro=data['micro'], is_ds=False)
-
-    # trace_names = [trace.name for trace in fig.data]
 
     # Sauvegarde des données calcul et visu de l'asr
     _save_for_asr(channels=data)
@@ -89,8 +81,8 @@ def get_layout():
 def _save_for_asr(channels, folder=analysis_path):
 
     # Supression des cycles dans car sauvegardés en .pkl et non .npy
-    cycles = channels.pop('cycles')
-    cycles.to_pickle(os.path.join(folder, f'cycles.pkl'))
+    cycles = channels.pop('cycles_features')
+    cycles.to_pickle(os.path.join(folder, f'cycles_features.pkl'))
     
     for name in useful_channel_asr:
         signal = channels[name] if name[-2:] != '_d' else channels['downsample'][name]
