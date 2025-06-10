@@ -52,15 +52,13 @@ def get_layout():
 
     return html.Div([
         html.H2("Visualisation du signal"),
-        # Checklist qui va contrôler la visibilité
-        # dcc.Checklist(
-        #     id='signal-toggle',
-        #     options=[{'label': name, 'value': name} for name in trace_names],
-        #     value=trace_names,    # coché par défaut
-        #     inline=True,
-        #     inputStyle={"margin-right": "5px", "margin-left": "20px"}
-        # ),
         dcc.Graph(id='analysis-graph', figure=fig),
+        dcc.Store(id='move-store', data={
+            'phase': 'start',         # 'start' ou 'select_resp'
+            'current_cycle': None,    # stocke {x_old, y_old, traceName, pointIndex}
+            'pairs': []               # liste de {old, new}
+        }),
+
         dcc.RadioItems(
             id='cleaning-mode',
             options=[
@@ -70,9 +68,12 @@ def get_layout():
             ],
             inline=True
         ),
+        
         html.Br(),
         html.Div(children='Modification mode :'),
         html.Div(id='mode-state', children='No active modification mode'),
+        html.Br(),
+        html.Div(id='move-log'),
         html.Br(),
         html.Button('Valider modifications', id='btn-submit'),
         html.Div(id='channels-asr')
