@@ -1,21 +1,7 @@
-from dash import Input, Output, State, html
+from dash import Input, Output, State, clientside_callback
 import plotly.graph_objects as go
 from config import analysis_path, useful_channel_asr
 import os
-# def register_callbacks(app):
-#     @app.callback(
-#         Output('analysis-graph', 'figure'),
-#         Input('signal-toggle', 'value'),
-#         State('analysis-graph', 'figure'),
-#         prevent_initial_call=True
-#     )
-#     def toggle_traces(selected_names, fig):
-#         # reconstruit la Figure Plotly
-#         # fig = go.Figure(existing_fig)
-#         # pour chaque trace, on ajuste visible=True ou legendonly
-#         for trace in fig["data"]:
-#             trace["visible"] = True if trace["name"] in selected_names else 'legendonly'
-#         return fig
 
 def register_callbacks(app):
     @app.callback(
@@ -34,3 +20,15 @@ def register_callbacks(app):
         if not value:
             return 'No active modification mode'
         return value
+    
+    app.clientside_callback(
+        """
+        function(mode, fig) {
+            return window.dash_clientside.clientside.toggle_traces(mode, fig);
+        }
+        """,
+        Output('analysis-graph', 'figure'),
+        Input('cleaning-mode', 'value'),
+        State('analysis-graph', 'figure'),
+        prevent_initial_call=True
+    )
