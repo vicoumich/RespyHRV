@@ -4,7 +4,7 @@ window.dash_clientside.clientside = {
   // Fonction appelée par le clientside_callback Dash
   // Inputs : cleaning_mode (string), existing figure (JS object)
   // Returns : nouvelle figure modifiée
-toggle_traces: function(mode, moveData, fig) {
+toggle_traces: function(mode, moveData, deleteData, fig) {
     // phase start si pas de phase
     var phase = moveData.phase || 'start';
     console.log("mode = ", mode);
@@ -29,6 +29,11 @@ toggle_traces: function(mode, moveData, fig) {
         delete trace.hoveron;
       }
     });
+    
+
+    ///////////////////////////////
+    /// TRACE POST MODIFICATION ///
+    //////////////////////////////
 
     // Suppression des anciens points modifiés pour éviter duplication sur le plot
     newFig.data = newFig.data.filter(t => {
@@ -66,6 +71,30 @@ toggle_traces: function(mode, moveData, fig) {
       });
     });
 
+    newFig.layout.shapes = newFig.layout.shapes || [];
+
+    (deleteData.pairs || []).forEach(pair => {
+      const x0 = pair.start.x_start;
+      const x1 = pair.end.x_end;
+
+      // Ligne verticale au début de l'intervalle
+      newFig.layout.shapes.push({
+        type: 'line',
+        x0: x0, x1: x0,
+        y0: 0,  y1: 1,
+        xref: 'x', yref: 'paper',
+        line: { color: 'red', width: 2, dash: 'dash' }
+      });
+
+      // Ligne verticale à la fin de l'intervalle
+      newFig.layout.shapes.push({
+        type: 'line',
+        x0: x1, x1: x1,
+        y0: 0,  y1: 1,
+        xref: 'x', yref: 'paper',
+        line: { color: 'red', width: 2, dash: 'dash' }
+      });
+    });
     return newFig;
   }
 

@@ -80,13 +80,14 @@ def register_callbacks(app):
 
     app.clientside_callback(
         """
-        function(mode, moveData, fig) {
-            return window.dash_clientside.clientside.toggle_traces(mode, moveData, fig);
+        function(mode, moveData, deleteData, fig) {
+            return window.dash_clientside.clientside.toggle_traces(mode, moveData, deleteData, fig);
         }
         """,
         Output('analysis-graph', 'figure'),
         Input('cleaning-mode', 'value'),
         Input('move-store', 'data'),
+        Input('delete-store', 'data'),
         State('analysis-graph', 'figure'),
         prevent_initial_call=True
     )
@@ -165,7 +166,6 @@ def build_delete_response(delete_data, pt):
         delete_data['phase'] = 'start'
 
         return delete_data
-
 
 def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
     children = []
