@@ -4,7 +4,9 @@ window.dash_clientside.clientside = {
   // Fonction appelée par le clientside_callback Dash
   // Inputs : cleaning_mode (string), existing figure (JS object)
   // Returns : nouvelle figure modifiée
-toggle_traces: function(mode, moveData, deleteData, fig) {
+toggle_traces: function(mode, moveData, deleteData, addData, fig) {
+    // Correspondance inspi/expi et id de traces
+
     // phase start si pas de phase
     var phase = moveData.phase || 'start';
     console.log("mode = ", mode);
@@ -95,7 +97,44 @@ toggle_traces: function(mode, moveData, deleteData, fig) {
         line: { color: 'red', width: 2, dash: 'dash' }
       });
     });
-    return newFig;
-  }
+    // Ajout des points "Add"
+    // On supprime les anciennes traces Add pour éviter la duplication
+    newFig.data = newFig.data.filter(t => {
+      return !(t.name && (t.name.startsWith('Add_inspi') || t.name.startsWith('Add_expi')));
+    });
 
+    // Pour chaque pair à ajouter on overlay deux markers
+    (addData.pairs || []).forEach((pair, i) => {
+        var p_inspi = pair.inspi;
+        var p_expi  = pair.expi;
+        // debug
+        console.log(pair)
+        // fin debug
+        
+        const colors = { inspi: 'green', expi: 'red' };
+
+        // Premier point (first)
+        newFig.data.push({
+            x: [p_inspi[`x_inspi`]],
+            y: [p_inspi[`y_inspi`]],
+            mode: 'markers',
+            name: `Add_inspi_${i+1}`,
+            marker: { color: colors['inspi'], size: 10, opacity: 1.0 },
+            hoverinfo: 'x+y',
+            showlegend: false
+        });
+
+        // Second point (second)
+        newFig.data.push({
+        x: [p_expi[`x_expi`]],
+        y: [p_expi[`y_expi`]],
+        mode: 'markers',
+        name: `Add_expi_${i+1}`,
+        marker: { color: colors['expi'], size: 10, opacity: 1.0 },
+        hoverinfo: 'x+y',
+        showlegend: false
+        });
+    });
+    return newFig;
+    }
 };

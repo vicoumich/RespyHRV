@@ -66,13 +66,7 @@ def register_callbacks(app):
     def handle_plot_click(clickData, mode, move_data, delete_data, add_data):
         # if mode != 'move' or clickData is None:
         #     return move_data, no_update
-        # debug
-        print('\n')
-        print("move data : ", move_data)
-        print("delete data : ", delete_data)
-        print("add data : ", add_data)
-        print('\n')
-        # fin debug
+        
         # récup l'index de la trace et du point
         pt = clickData['points'][0]
 
@@ -84,7 +78,13 @@ def register_callbacks(app):
         if mode == 'add':
             add_data= build_add_response(add_data, pt)
         children = show_modifs(move_data['pairs'], delete_data['pairs'], add_data['pairs'])
-        
+        # debug
+        print('\n')
+        print("move data : ", move_data)
+        print("delete data : ", delete_data)
+        print("add data : ", add_data)
+        print('\n')
+        # fin debug
         return move_data, delete_data, add_data, children
 
     # Gestion du choix du type de point à ajouter
@@ -101,14 +101,15 @@ def register_callbacks(app):
 
     app.clientside_callback(
         """
-        function(mode, moveData, deleteData, fig) {
-            return window.dash_clientside.clientside.toggle_traces(mode, moveData, deleteData, fig);
+        function(mode, moveData, deleteData, addData, fig) {
+            return window.dash_clientside.clientside.toggle_traces(mode, moveData, deleteData, addData, fig);
         }
         """,
         Output('analysis-graph', 'figure'),
         Input('cleaning-mode', 'value'),
         Input('move-store', 'data'),
         Input('delete-store', 'data'),
+        Input('add-store', 'data'),
         State('analysis-graph', 'figure'),
         prevent_initial_call=True
     )
