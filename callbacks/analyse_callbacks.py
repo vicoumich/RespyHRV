@@ -2,16 +2,25 @@ from dash import Input, Output, State, clientside_callback, no_update, html, dcc
 import plotly.graph_objects as go
 from config import analysis_path, useful_channel_asr
 import os
+import json 
 
 def register_callbacks(app):
     # Gestion du bouton de retour des changements des cycles
     @app.callback(
         Output('channels-asr', 'children'),
         Input('btn-submit', 'n_clicks'),
+        State('move-store', 'data'),
+        State('delete-store', 'data'),
+        State('add-store', 'data'),
         prevent_initial_call=True
     )
-    def on_validate_cycles(n_clicks):
-        print("clicked")
+    def on_validate_cycles(n_clicks, move_data, delete_data, add_data):
+        modif_data = {
+            'move_data': move_data,
+            'delete_data': delete_data,
+            'add_data': add_data
+        }
+        print(json.dumps(modif_data, indent=4))
 
     # Gestion des modes de modification des cycles
     # move, delete, add
