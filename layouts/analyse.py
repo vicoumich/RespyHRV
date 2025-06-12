@@ -68,6 +68,14 @@ def get_layout():
             'pairs': []               # liste de {start, end}
         }),
 
+        # Storage des add modifs
+        dcc.Store(id='add-store', data={
+            'phase': 'start',
+            'first': None,         # 'expi' ou 'inspi'
+            'point': None,         # x,y
+            'pairs': []               # liste de {start, end}
+        }),
+
         dcc.RadioItems(
             id='cleaning-mode',
             options=[

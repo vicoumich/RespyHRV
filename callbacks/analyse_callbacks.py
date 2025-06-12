@@ -1,4 +1,4 @@
-from dash import Input, Output, State, clientside_callback, no_update, html
+from dash import Input, Output, State, clientside_callback, no_update, html, dcc
 import plotly.graph_objects as go
 from config import analysis_path, useful_channel_asr
 import os
@@ -18,34 +18,34 @@ def register_callbacks(app):
     @app.callback(
         Output('mode-state', 'children'),
         Input('cleaning-mode', 'value'),
-        State('move-store', 'data'),
-        State('delete-store', 'data'),
         prevent_initial_call=True
     )
-    def on_choosing_mode(mode, move_data, delete_data):
-        # debug
-        print("move data : ", move_data)
-        print("delete data : ", delete_data)
-        # fin debug
+    def on_choosing_mode(mode):
 
         if mode == 'move':
             # si on entre en mode move
             # Remise à zéro des opération différentes en cours
-            delete_data['phase'] = 'start'
-            delete_data['start'] = None
             return "Phase 1: Click on a expi/inspi point"
         
         if mode == 'delete':
             # si on rentre en mode delete
-            move_data['phase'] = 'start'
-            move_data['current_cycle'] = None
-            return "Click on the first point of the interval to delete"
+            return "Click on the limits of the interval to delete, starting from min"
         
-        # reset si on sort du mode Move et Delete
-        move_data['phase'] = 'start'
-        move_data['current_cycle'] = None
-        delete_data['phase'] = 'start'
-        delete_data['start'] = None
+        if mode == 'add':
+            # si mode add
+            # Permet le choix d'ajouter une inspi ou une expi
+            return [
+                "Choose what you want to add and click where you want to add it",
+                dcc.RadioItems(
+                    id='to-add',
+                    options=[
+                        {'label': 'Inspi', 'value': 'inspi'}, 
+                        {'label': 'Expi', 'value': 'expi'}
+                    ],
+                    value='inspi',
+                    inline=True
+                )
+            ]
         return mode
         
     
@@ -54,17 +54,25 @@ def register_callbacks(app):
     @app.callback(
         Output('move-store', 'data'),
         Output('delete-store', 'data'),
+        Output('add-store', 'data', allow_duplicate=True),
         Output('log',   'children'),
         Input('analysis-graph', 'clickData'),
         State('cleaning-mode', 'value'),
         State('move-store',    'data'),
         State('delete-store',  'data'), 
+        State('add-store', 'data'),
         prevent_initial_call=True
     )
-    def handle_move_click(clickData, mode, move_data, delete_data):
+    def handle_plot_click(clickData, mode, move_data, delete_data, add_data):
         # if mode != 'move' or clickData is None:
         #     return move_data, no_update
-
+        # debug
+        print('\n')
+        print("move data : ", move_data)
+        print("delete data : ", delete_data)
+        print("add data : ", add_data)
+        print('\n')
+        # fin debug
         # récup l'index de la trace et du point
         pt = clickData['points'][0]
 
@@ -74,9 +82,22 @@ def register_callbacks(app):
         if mode == 'delete':
             delete_data= build_delete_response(delete_data, pt)
         if mode == 'add':
-            pass
-        children = show_modifs(move_data['pairs'], delete_data['pairs'])
-        return move_data, delete_data, children
+            add_data= build_add_response(add_data, pt)
+        children = show_modifs(move_data['pairs'], delete_data['pairs'], add_data['pairs'])
+        
+        return move_data, delete_data, add_data, children
+
+    # Gestion du choix du type de point à ajouter
+    @app.callback(
+        Output('add-store', 'data'),
+        Input('to-add', 'value'),
+        State('add-store', 'data')
+    )
+    def choose_to_add(to_add, add_store):
+        add_store["first"] = to_add
+        add_store["phase"] = "start"
+        add_store["point"] = None
+        return add_store
 
     app.clientside_callback(
         """
@@ -154,18 +175,57 @@ def build_delete_response(delete_data, pt):
         delete_data['start'] = start
 
         delete_data['phase'] = 'end'
-        log = html.Div("Phase 2 - Cliquez sur le nouveau point sur 'Respiration traitée'")
+        # log = html.Div("Phase 2 - Cliquez sur le nouveau point sur 'Respiration traitée'")
         return delete_data #, log
     
     if delete_data['phase'] == 'end':
         start = delete_data['start']
         end = {'x_end': x_clicked, 'y_end': y_clicked}
+        # Vérification si start est bienavant end
+        # switching des valeurs entre end et start si oui
+        if start['x_start'] > end['x_end']:
+            start['x_start'], end['x_end'] = end['x_end'], start['x_start']
+            start['y_start'], end['y_end'] = end['y_end'], start['y_start']
         delete_data['pairs'].append({'start': start, 'end': end})
 
         delete_data['start'] = None
         delete_data['phase'] = 'start'
 
         return delete_data
+
+def build_add_response(add_data, pt):
+    """
+        Gère le controle d'un joue d'expi si ajout d'inspi et inversement
+        (on ne peut pas ajouter une expi sans ajouter l'inspi)
+    """
+    curve_idx   = pt['curveNumber']
+    point_index = pt['pointIndex']
+    x_clicked   = pt['x']
+    y_clicked   = pt['y']
+    trace_name  = pt['curveNumber']
+    
+    # if add_data['first'] is None:
+    #     return add_data
+
+    if add_data['phase'] == 'start':
+        # premier point ajouté
+        # add_data['first'] = 'expi' | 'inspi'
+        add_data['point'] = {f'x_{add_data["first"]}': x_clicked,
+                             f'y_{add_data["first"]}': y_clicked}
+        add_data['phase'] = 'end'
+        return add_data
+    
+    if add_data['phase'] == 'end':
+        second = 'expi' if add_data['first'] == 'inspi' else 'inspi'
+        second_point = {f'x_{second}': x_clicked, 
+                        f'y_{second}': y_clicked}
+        add_data['pairs'].append({add_data['first']: add_data['point'],
+                                  second: second_point})
+        # Réinitialise le storage pour repartir de zéro
+        add_data['phase'] = 'start'
+
+        return add_data
+
 
 def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
     children = []
@@ -175,14 +235,14 @@ def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
 
     children.append(move_title)
     for pair in move_pairs:
-        children.append(html.Div(f"Modif {pair['old']['x_old']:.2f}s → {pair['new']['x_new']:.2f}s"))
+        children.append(html.Div(f"{pair['old']['x_old']:.2f}s → {pair['new']['x_new']:.2f}s"))
 
     children.append(delete_title)
     for pair in delete_pairs:
-        children.append(html.Div(f"Delete {pair['start']['x_start']:.2f}s - {pair['end']['x_end']:.2f}s"))
+        children.append(html.Div(f"{pair['start']['x_start']:.2f}s - {pair['end']['x_end']:.2f}s"))
 
     children.append(add_title)
     for pair in add_pairs:
-        children.append()
+        children.append(html.Div(f"+ inspi: {pair['inspi']['x_inspi']:.2f}s & expi: {pair['expi']['x_expi']:.2f}s"))
 
     return children    
