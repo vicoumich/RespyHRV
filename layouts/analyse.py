@@ -53,10 +53,19 @@ def get_layout():
     return html.Div([
         html.H2("Visualisation du signal"),
         dcc.Graph(id='analysis-graph', figure=fig),
+
+        # Storage des move modifs
         dcc.Store(id='move-store', data={
             'phase': 'start',         # 'start' ou 'select_resp'
             'current_cycle': None,    # stocke {x_old, y_old, traceName, pointIndex}
             'pairs': []               # liste de {old, new}
+        }),
+
+        # Storage des delete modifs
+        dcc.Store(id='delete-store', data={
+            'phase': 'start',         # 'start' ou 'end'
+            'start': None,           # stocke {x_start, y_start, traceName, pointIndex}
+            'pairs': []               # liste de {start, end}
         }),
 
         dcc.RadioItems(
@@ -73,7 +82,7 @@ def get_layout():
         html.Div(children='Modification mode :'),
         html.Div(id='mode-state', children='No active modification mode'),
         html.Br(),
-        html.Div(id='move-log'),
+        html.Div(id='log'),
         html.Br(),
         html.Button('Valider modifications', id='btn-submit'),
         html.Div(id='channels-asr')
