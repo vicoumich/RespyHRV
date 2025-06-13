@@ -24,31 +24,31 @@ def get_layout():
     # Fréquence de down Sample entrée dans la GUI
     ds_freq   = float(session_info['ds_freq']) if session_info['ds_freq'] != 'None' else None
     # ds_freq_i = int(ds_freq) if not(ds_freq is None ) else None
-    
-    data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
-       
+           
     # Affichage downsamplé ou non en fonction de l'attribut sélectionné sur la GUI
     if ds_freq != None:
-        fig = modules.ploting.normalised_ecg_resp_plot(data['downsample'][f'time_d'], # modules.ploting.build_fig
-                                        data['downsample'][f'resp_d'], 
-                                        data['downsample'][f'clean_resp_d'],
-                                        data['downsample'][f'cycles_d'],
-                                        data['downsample'][f'ecg_d'],
-                                        data['downsample'][f'clean_ecg_d'],
-                                        data['downsample'][f'ecg_peaks_d'],
-                                        data['downsample'][f'status_d'],
-                                        micro=data['downsample'][f'micro_d'],
+        data = modules.bdf_reader.get_downsampled_signals(file_path, selected_channels, ds_freq)
+        fig = modules.ploting.normalised_ecg_resp_plot(data[f'time_d'], # modules.ploting.build_fig
+                                        data[f'resp_d'], 
+                                        data[f'clean_resp_d'],
+                                        data[f'cycles_d'],
+                                        data[f'ecg_d'],
+                                        data[f'clean_ecg_d'],
+                                        data[f'ecg_peaks_d'],
+                                        data[f'status_d'],
+                                        micro=data[f'micro_d'],
                                         is_ds=True, bpm=data['instant_bpm'], 
                                         time_bpm=data['time_bpm'], cycles_on_bpm=False
                                         )
     else: 
+        data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
         fig = modules.ploting.normalised_ecg_resp_plot(data['time'], data['resp'], 
                                         data['clean_resp'], data['cycles'], data['ecg'],
                                         data['clean_ecg'], data['ecg_peaks'], data['status'],
-                                        micro=data['micro'], is_ds=False)
+                                        micro=data['micro'], is_ds=False, cycles_on_bpm=False)
 
     # Sauvegarde des données calcul et visu de l'asr
-    _save_for_asr(channels=data)
+    # _save_for_asr(channels=data)
 
     return html.Div([
         html.H2("Visualisation du signal"),

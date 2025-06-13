@@ -68,32 +68,9 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         units='bpm', interpolation_kind='linear'
     )
 
-    downsample = {}
-    if ds_freq and ds_freq < sf:
-        factor = int(sf // ds_freq)
-        time_d = time[::factor]# downsample_signal(time, sf, ds_freq)
-        resp_d = resp[::factor] # downsample_signal(resp, sf, ds_freq)
-        clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
-        ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
-        clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
-        micro_d = micro[::factor] if micro != None else None
-        cycles_d = (cycles // factor).astype(np.int64)
-        ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
-        status_d = { k: [int(i // factor) for i in v] for k,v in status.items()} if status != None else None 
-        # status = downsample_signal(status, sf, ds_freq)
-        # sf = ds_freq
-        # ds_freq_i = int(ds_freq)
-        downsample = {
-            f'resp_d': resp_d,
-            f'time_d': time_d,
-            f'clean_resp_d': clean_resp_d,
-            f'ecg_d': ecg_d,
-            f'clean_ecg_d': clean_ecg_d,
-            f'cycles_d': cycles_d,
-            f'ecg_peaks_d': ecg_peaks_d,
-            f'status_d': status_d,
-            f'micro_d': micro_d
-        }
+    # downsample = downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro,
+    #                                cycles, ecg_peaks, status)
+    
 
     return {
         'resp': resp,
@@ -109,9 +86,20 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         'cycles_features':cycles_features,
         'time_bpm':time_bpm,
         'instant_bpm': instant_bpm,
-        'downsample': downsample, 
+        # 'downsample': downsample, 
     }
 
+def get_downsampled_signals(file_name: str, channels: dict, ds_freq=None):
+    data = extract_signals(file_name, channels, ds_freq)
+    ds_data = downsample_signal(data['sf'], ds_freq,
+                            data['time'], data['resp'], 
+                            data['clean_resp'], data['ecg'],
+                            data['clean_ecg'], data['micro'], 
+                            data['cycles'], data['ecg_peaks'], 
+                            data['status'])
+    ds_data['time_bpm'] = data['time_bpm'][:] # copy
+    ds_data['instant_bpm'] = data['instant_bpm'][:] # copy
+    return ds_data
 
 def extract_timestamps(status, sfreq, target_values=(50, 70), precise_complete=None):
     """
