@@ -26,7 +26,7 @@ def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro
         clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
         ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
         clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
-        micro_d = micro[::factor] if micro != None else None
+        micro_d = micro[::factor] # if micro != None else None
         cycles_d = (cycles // factor).astype(np.int64)
         ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
         status_d = { k: [int(i // factor) for i in v] for k,v in status.items()} if status != None else None 
