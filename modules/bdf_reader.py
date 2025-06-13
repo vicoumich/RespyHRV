@@ -18,6 +18,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     status and time in seconde.
     """
     bdf = read_raw_bdf(file_name)
+    channels = {key: val for key,val in channels.items() if val != None}
     bdf = bdf.pick_channels(list(channels.values()))
     sf  = bdf.info["sfreq"]
     
@@ -31,7 +32,10 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     
     # Calcul des timestamps de stress
     status = bdf[channels['status']][0].ravel()
-    status = extract_timestamps(status, sf, precise_complete=1)
+    try:
+        status = extract_timestamps(status, sf, precise_complete=1)
+    except:
+        status = None
     # Pas de label précis, juste des débuts et des fins 
     # status = {
     #     'start': status[50][0],
@@ -42,7 +46,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     # }
 
     # Micro
-    micro = bdf[channels['micro']][0].ravel()
+    micro = bdf[channels['micro']][0].ravel() if channels.get('micro', None)!= None else None
 
     # Nettoyage des artefactes dans la resp (signal smoothing en gros)
     clean_resp = process_resp(resp.copy(), sf)
@@ -72,10 +76,10 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
         ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
         clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
-        micro_d = micro[::factor] 
+        micro_d = micro[::factor] if micro != None else None
         cycles_d = (cycles // factor).astype(np.int64)
         ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
-        status_d = { k: [int(i // factor) for i in v] for k,v in status.items()}
+        status_d = { k: [int(i // factor) for i in v] for k,v in status.items()} if status != None else None 
         # status = downsample_signal(status, sf, ds_freq)
         # sf = ds_freq
         # ds_freq_i = int(ds_freq)

@@ -13,6 +13,7 @@ session_path = os.path.join(SESSION_FOLDER, 'session.json')
 analysis_path = os.path.join(SESSION_FOLDER, 'data')
 
 # Ensure the folder exists
+os.makedirs(SESSION_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(analysis_path, exist_ok=True)
 
