@@ -18,7 +18,9 @@ import numpy as np
 #     # Fir pour conserver la validité de nos cycles respi
 #     return decimate(signal, decimation_factor, ftype='fir', zero_phase=True)
 
-def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro, cycles, ecg_peaks, status):
+def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg,
+                      clean_ecg, micro, cycles, ecg_peaks, status,
+                      cycles_features):
     if ds_freq and ds_freq < sf:
         factor = int(sf // ds_freq)
         time_d = time[::factor]# downsample_signal(time, sf, ds_freq)
@@ -30,6 +32,10 @@ def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro
         cycles_d = (cycles // factor).astype(np.int64)
         ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
         status_d = { k: [int(i // factor) for i in v] for k,v in status.items()} if status != None else None 
+
+        # Ajout d'index en down_samplés pour le ploting
+        cycles_features['inspi_index'] = (cycles_features['inspi_index'] // factor).astype(int)
+        cycles_features['expi_index'] = (cycles_features['expi_index'] // factor).astype(int)
         # status = downsample_signal(status, sf, ds_freq)
         # sf = ds_freq
         # ds_freq_i = int(ds_freq)
@@ -42,7 +48,8 @@ def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro
             f'cycles_d': cycles_d,
             f'ecg_peaks_d': ecg_peaks_d,
             f'status_d': status_d,
-            f'micro_d': micro_d
+            f'micro_d': micro_d,
+            f'cycles_features_d': cycles_features
         }
     
     else:

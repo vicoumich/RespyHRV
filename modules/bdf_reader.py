@@ -2,6 +2,7 @@ from mne.io import read_raw_bdf
 import physio_piezo
 import numpy as np
 from modules.downsampling import downsample_signal
+import config
 
 def extract_channels(file_name):
     bdf = read_raw_bdf(file_name)
@@ -17,6 +18,18 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     Returns ecg, respi, processed respi, sampling rate,
     status and time in seconde.
     """
+
+    # Tente d'abord de lire les données sauvegardées
+    if config.is_data():
+        # debug
+        print("\n\nchargement depuis pickle\n\n")
+        # fin debug
+        return config.read_data()
+
+    # Sinon lit le fichier bdf
+    # debug
+    print("\n\nchargement depuis bdf\n\n")
+    # fin debug
     bdf = read_raw_bdf(file_name)
     channels = {key: val for key,val in channels.items() if val != None}
     bdf = bdf.pick_channels(list(channels.values()))
@@ -71,14 +84,14 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
     # downsample = downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro,
     #                                cycles, ecg_peaks, status)
     
-
-    return {
+    data = {
         'resp': resp,
         'status': status,
         'clean_resp': clean_resp,
         'time': time,
         'cycles': cycles,
         'sf': sf,
+        'ds_freq': ds_freq,
         'ecg': ecg,
         'clean_ecg': clean_ecg,
         'ecg_peaks': ecg_peaks,
@@ -88,15 +101,22 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         'instant_bpm': instant_bpm,
         # 'downsample': downsample, 
     }
+    # Sauvegarde des cannaux lue
+    config.save_data(channels=data.copy())
+
+    return data
 
 def get_downsampled_signals(file_name: str, channels: dict, ds_freq=None):
     data = extract_signals(file_name, channels, ds_freq)
+    # debug
+    # print("Dans get_downsampled : ", data.keys())
+    # fin debug
     ds_data = downsample_signal(data['sf'], ds_freq,
                             data['time'], data['resp'], 
                             data['clean_resp'], data['ecg'],
                             data['clean_ecg'], data['micro'], 
                             data['cycles'], data['ecg_peaks'], 
-                            data['status'])
+                            data['status'], data['cycles_features'])
     ds_data['time_bpm'] = data['time_bpm'][:] # copy
     ds_data['instant_bpm'] = data['instant_bpm'][:] # copy
     return ds_data

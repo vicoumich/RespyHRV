@@ -1,5 +1,5 @@
 from dash import Output, Input
-from layouts.home import layout as home_layout
+from layouts.home import get_layout as home_layout
 from layouts.files import get_layout as files_layout
 from layouts.select import get_layout as select_layout
 from layouts.analyse import get_layout as analyse_layout
@@ -25,4 +25,4 @@ def register_callbacks(app):
         elif pathname == '/respHRV':
             return respHRV_layout()
         else:
-            return home_layout
+            return home_layout()

@@ -97,12 +97,3 @@ def get_layout():
     ])
     
 
-def _save_for_asr(channels, folder=analysis_path):
-
-    # Supression des cycles dans car sauvegardés en .pkl et non .npy
-    cycles = channels.pop('cycles_features')
-    cycles.to_pickle(os.path.join(folder, f'cycles_features.pkl'))
-    
-    for name in useful_channel_asr:
-        signal = channels[name] if name[-2:] != '_d' else channels['downsample'][name]
-        np.save(os.path.join(folder, f'{name}.npy'), signal, allow_pickle=False)
