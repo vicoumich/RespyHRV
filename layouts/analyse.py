@@ -70,8 +70,8 @@ def get_layout():
 
         # Storage des add modifs
         dcc.Store(id='add-store', data={
-            'phase': 'start',
-            'first': None,         # 'expi' ou 'inspi'
+            # 'phase': 'start',
+            'type': None,         # 'expi' ou 'inspi'
             'point': None,         # x,y
             'pairs': []               # liste de {start, end}
         }),
