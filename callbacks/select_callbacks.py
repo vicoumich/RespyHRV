@@ -22,6 +22,8 @@ def register_callbacks(app):
         # print(" RESP:", resp)
         # print(" STATUS:", status)
         # fin debug
+        with open(session_path, 'r') as file:
+            data = json.load(file)
         channels = {}
         if len(ecg) > 1:
             channels['ecg1'] = ecg[0]
@@ -31,11 +33,11 @@ def register_callbacks(app):
         channels['respi'] = resp
         channels['status'] = status
         channels['micro'] = micro
-        UPLOAD_TRACKER['selected_channels'] = channels
-        UPLOAD_TRACKER['ds_freq'] = float(ds_freq) if ds_freq != None else 'None'
+        data['selected_channels'] = channels
+        data['ds_freq'] = float(ds_freq) if ds_freq != None else 'None'
 
         # Ajout des channels selectionnées dans le json session
         with open(session_path, 'w') as json_file:
-            json.dump(UPLOAD_TRACKER, json_file)
+            json.dump(data, json_file)
             
         return dcc.Location(pathname='/analyse', id='redirect-after-select')
