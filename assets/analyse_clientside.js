@@ -105,35 +105,35 @@ toggle_traces: function(mode, moveData, deleteData, addData, fig) {
 
     // Pour chaque pair à ajouter on overlay deux markers
     (addData.pairs || []).forEach((pair, i) => {
-        var p_type = pair.type;
-        // var p_expi  = pair.expi;
+        var p_inspi = pair.inspi;
+        var p_expi  = pair.expi;
         // debug
         console.log(pair)
         // fin debug
         
-        const colors = { 'inspi': 'green', 'expi': 'red' };
+        const colors = { inspi: 'green', expi: 'red' };
 
         // Premier point (first)
         newFig.data.push({
-            x: [pair[`x`]],
-            y: [pair[`y`]],
+            x: [p_inspi[`x_inspi`]],
+            y: [p_inspi[`y_inspi`]],
             mode: 'markers',
             name: `Add_inspi_${i+1}`,
-            marker: { color: colors[p_type], size: 10, opacity: 1.0 },
+            marker: { color: colors['inspi'], size: 10, opacity: 1.0 },
             hoverinfo: 'x+y',
             showlegend: false
         });
 
         // Second point (second)
-        // newFig.data.push({
-        // x: [p_expi[`x_expi`]],
-        // y: [p_expi[`y_expi`]],
-        // mode: 'markers',
-        // name: `Add_expi_${i+1}`,
-        // marker: { color: colors['expi'], size: 10, opacity: 1.0 },
-        // hoverinfo: 'x+y',
-        // showlegend: false
-        // });
+        newFig.data.push({
+        x: [p_expi[`x_expi`]],
+        y: [p_expi[`y_expi`]],
+        mode: 'markers',
+        name: `Add_expi_${i+1}`,
+        marker: { color: colors['expi'], size: 10, opacity: 1.0 },
+        hoverinfo: 'x+y',
+        showlegend: false
+        });
     });
     return newFig;
     }

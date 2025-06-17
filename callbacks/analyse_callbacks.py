@@ -2,7 +2,8 @@ from dash import Input, Output, State, clientside_callback, no_update, html, dcc
 import plotly.graph_objects as go
 from config import analysis_path, useful_channel_asr
 import os
-import json 
+import json
+from modules.signal_modification import main_modif
 
 def register_callbacks(app):
     # Gestion du bouton de retour des changements des cycles
@@ -21,6 +22,8 @@ def register_callbacks(app):
             'add_data': add_data
         }
         print(json.dumps(modif_data, indent=4))
+        print(main_modif(modif_data))
+
 
     # Gestion des modes de modification des cycles
     # move, delete, add
@@ -103,9 +106,9 @@ def register_callbacks(app):
         State('add-store', 'data')
     )
     def choose_to_add(to_add, add_store):
-        add_store["type"] = to_add
-        # add_store["phase"] = "start"
-        # add_store["point"] = None
+        add_store["first"] = to_add
+        add_store["phase"] = "start"
+        add_store["point"] = None
         return add_store
 
     app.clientside_callback(
@@ -217,27 +220,24 @@ def build_add_response(add_data, pt):
     # if add_data['first'] is None:
     #     return add_data
 
-    # if add_data['phase'] == 'start':
+    if add_data['phase'] == 'start':
         # premier point ajouté
         # add_data['first'] = 'expi' | 'inspi'
-    add_data['pairs'].append({
-        'type': add_data['type'], 
-        f'x': x_clicked,
-        f'y': y_clicked
-    })
-    # add_data['type'] = None
-    return add_data
+        add_data['point'] = {f'x_{add_data["first"]}': x_clicked,
+                             f'y_{add_data["first"]}': y_clicked}
+        add_data['phase'] = 'end'
+        return add_data
     
-    # if add_data['phase'] == 'end':
-    #     second = 'expi' if add_data['first'] == 'inspi' else 'inspi'
-    #     second_point = {f'x_{second}': x_clicked, 
-    #                     f'y_{second}': y_clicked}
-    #     add_data['pairs'].append({add_data['first']: add_data['point'],
-    #                               second: second_point})
-    #     # Réinitialise le storage pour repartir de zéro
-    #     add_data['phase'] = 'start'
+    if add_data['phase'] == 'end':
+        second = 'expi' if add_data['first'] == 'inspi' else 'inspi'
+        second_point = {f'x_{second}': x_clicked, 
+                        f'y_{second}': y_clicked}
+        add_data['pairs'].append({add_data['first']: add_data['point'],
+                                  second: second_point})
+        # Réinitialise le storage pour repartir de zéro
+        add_data['phase'] = 'start'
 
-    #     return add_data
+        return add_data
 
 
 def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
@@ -256,6 +256,5 @@ def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
 
     children.append(add_title)
     for pair in add_pairs:
-        children.append(html.Div(f"+ {pair['type']}: {pair['x']:2f}s"))
-
+        children.append(html.Div(f"+ inspi: {pair['inspi']['x_inspi']:.2f}s & expi: {pair['expi']['x_expi']:.2f}s"))
     return children    
