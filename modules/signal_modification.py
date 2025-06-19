@@ -1,7 +1,7 @@
-from config import read_data
+from config import read_data, save_data
 import pandas as pd
 import numpy as np
-
+from physio_piezo.respiration import compute_respiration_cycle_features
 def main_modif(data: dict) -> str:
     """
         Fonction de modification des signaux en fonction des
@@ -97,7 +97,7 @@ def main_modif(data: dict) -> str:
         current_cycle = new_cycles.iloc[index_to_move]
 
         # debug
-        print(current_cycle)
+        #print(current_cycle)
         # fin debug
 
         if resp_type == 'expi':
@@ -205,7 +205,17 @@ def main_modif(data: dict) -> str:
                 new_row.at[0, 'next_inspi_time'] = old_next_inspi
                 new_cycles = _insert_row(new_cycles, new_row, index)
 
-        
+    # Passage de données temporal à index dans le signal
+    data['cycles'] = new_cycles[["inspi_time", "expi_time", "next_inspi_time"]].to_numpy()
+    data['cycles'] = (data['cycles'] * data['sf']).astype(int)
+    # Sauvegarde des modifications valides
+
+    # debug
+    # print(data['cycles_features'], "\n\n", type(data['cycles_features']))
+    # fin debug
+    data['cycles_features'] = compute_respiration_cycle_features(data['clean_resp'], data['sf'], data['cycles'], 0.0)
+
+    save_data(data)
     
     if error_log == []:
         result = "No issues in the modification process"

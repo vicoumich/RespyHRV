@@ -110,7 +110,7 @@ def read_data(
     data['ds_freq'] = freqs['ds_freq'] if freqs['ds_freq'] != 'None' else None
 
     # debug
-    print(data['ecg_peaks'])
+    # print(data['ecg_peaks'])
     # fin debug
 
     return data 
