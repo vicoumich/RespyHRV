@@ -1,5 +1,6 @@
 from config import read_data
 import pandas as pd
+import numpy as np
 
 def main_modif(data: dict) -> str:
     """
@@ -45,13 +46,22 @@ def main_modif(data: dict) -> str:
                 ]
             },
             "add_data": {
-                "type": "inspi",
-                "point": null,
+                "phase": "start",
+                "first": "inspi",
+                "point": {
+                    "x_inspi": 78.140625,
+                    "y_inspi": -1.1043318631349957
+                },
                 "pairs": [
                     {
-                        "type": "inspi",
-                        "x": 894.78125,
-                        "y": -1.1874713211594843
+                        "inspi": {
+                            "x_inspi": 78.140625,
+                            "y_inspi": -1.1043318631349957
+                        },
+                        "expi": {
+                            "x_expi": 78.86328125,
+                            "y_expi": -1.307471442846559
+                        }
                     }
                 ]
             }
@@ -70,6 +80,7 @@ def main_modif(data: dict) -> str:
 
     # Correspondance id traces et expi/inspi
     trace_label = {2: 'inspi', 3: 'expi'}
+    opposit_resp = {'inspi': 'expi', 'expi': 'inspi'}
     
     #####################################################################
     ## Potentiellement faire toutes les vérifs après toutes les modifs ##
@@ -123,6 +134,78 @@ def main_modif(data: dict) -> str:
                 elif second_expi <= new_inspi:
                     error = build_error('move', resp_type, second_expi, new_inspi)
                 error_log.append(error)
+
+
+    # Ajout des points à ajouter
+    # Précondition: avoir couples inspi expi
+    for pair in modif_add:
+        inspi_time = pair['inspi']['x_inspi']
+        expi_time  = pair['expi']['x_expi']
+        # Premier à arriver dans le temps
+        # first_time, first_label = (inspi_time, 'inspi') if inspi_time < expi_time else (expi_time, 'expi')
+        if inspi_time < expi_time:
+            first_time, first_label = inspi_time, 'inspi'
+        else : first_time, first_label = expi_time, 'expi'
+        # Identification du cycles où on insère les points
+        index = np.searchsorted(new_cycles['inspi_time'].values, first_time, side='left') - 1
+        cycle = new_cycles.iloc[index]
+        # Soit avant soit après expi
+        
+        # Entre inspi_time et expi_time
+        if first_time < cycle['expi_time']:
+            # Si on a inspi-inspi au lieu de inspi-expi
+            if first_label == 'inspi':
+                error = build_error('add', first_label, 
+                                    cycle['inspi_time'], inspi_time, expi_time)
+                error_log.append(error)
+            # Si cycle ajouté n'est pas compris dans le cycle existant
+
+            elif inspi_time >= cycle['expi_time']:
+                error = build_error('add', first_label, 
+                                    expi_time, cycle['expi_time'], inspi_time)
+                error_log.append(error)
+            # on a bien inspi-expi-inspi-expi 
+            else:
+                old_expi  = cycle['expi_time']
+                old_next_inspi = cycle['next_inspi_time']
+                # Mise à jour du cycle courrant
+                new_cycles.at[index, 'expi_time'] = expi_time
+                new_cycles.at[index, 'next_inspi_time'] = inspi_time
+                # Création de la nouvelle ligne
+                new_row = pd.DataFrame([{col: np.nan for col in new_cycles.columns}])
+                new_row.at[0, 'inspi_time'] = inspi_time
+                new_row.at[0, 'expi_time'] = old_expi
+                new_row.at[0, 'next_inspi_time'] = old_next_inspi
+                # Insertion cohérente dans les cycles
+                new_cycles = _insert_row(new_cycles, new_row, index)
+
+        else:
+            # on a expi-expi au lieu de expi-inspi
+            if first_label == 'expi':
+                error = build_error('add', first_label, 
+                                    cycle['expi_time'], expi_time, inspi_time)
+                error_log.append(error)
+            # SI le newcycle n'est pas compris dans le courrant
+            # pas besoin de vérifier pour l'inspi car elle
+            # est logiquement avant
+
+            elif expi_time >= cycle['next_inspi_time']:
+                error = build_error('add', opposit_resp[first_label], 
+                                    inspi_time, cycle['next_inspi_time'], expi_time)
+                error_log.append(error)
+            # on a expi-inspi-expi-next_inspi
+            else:
+                old_next_inspi = cycle['next_inspi_time']
+                # Maj du cycle courant 
+                new_cycles.at[index, 'next_inspi_time'] = inspi_time
+                # Nouvelle ligne
+                new_row = pd.DataFrame([{col: np.nan for col in new_cycles.columns}])
+                new_row.at[0, 'inspi_time'] = inspi_time
+                new_row.at[0, 'expi_time']  = expi_time
+                new_row.at[0, 'next_inspi_time'] = old_next_inspi
+                new_cycles = _insert_row(new_cycles, new_row, index)
+
+        
     
     if error_log == []:
         result = "No issues in the modification process"
@@ -138,17 +221,27 @@ def main_modif(data: dict) -> str:
 def build_error(
     modif_type: str,
     current: str,
-    fix: int, move: int
+    time1: int, time2: int, time3=None
 ) -> str:
     """
         modif_type: str = 'move' | 'delete' | 'add'
         current: str = 'inspi' | 'expi' | None
         time1: int
         time2: int
+        time3: int (optionel)
     """
+    opposit_type = 'expi' if current == 'inspi' else 'inspi'
     if modif_type == 'move':
-        opposit_type = 'expi' if current == 'inspi' else 'inspi'
-        position  = 'anterior' if fix >= move else 'next'
+        position  = 'anterior' if time1 >= time2 else 'next'
         position2 = 'after' if position == 'next' else 'before'
-        return f"{current} moved {position2} the {position} {opposit_type} ({opposit_type}: {fix:2f}, new {current}: {move:2f})"
+        return f"{current} moved {position2} the {position} {opposit_type} ({opposit_type}: {time1:2f}, new {current}: {time2:2f})"
+    if modif_type == 'add':
+        return f"{current} added right after {current} without {opposit_type} between ({current}: {time1:2f}s, {current}: {time2:2f}, {opposit_type}: {time3:2f}s)"
 
+
+def _insert_row(df: pd.DataFrame, row: pd.DataFrame, index: int) -> None:
+    index += 1
+    df_top = df.iloc[:index]
+    df_bottom = df.iloc[index:]
+    df = pd.concat([df_top, row, df_bottom], ignore_index=True)
+    return df
