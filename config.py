@@ -109,6 +109,10 @@ def read_data(
     data['sf'] = freqs['sf']
     data['ds_freq'] = freqs['ds_freq'] if freqs['ds_freq'] != 'None' else None
 
+    # debug
+    print(data['ecg_peaks'])
+    # fin debug
+
     return data 
 
 

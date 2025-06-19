@@ -53,6 +53,30 @@ def get_layout():
     return html.Div([
         html.H2("Visualisation du signal"),
         dcc.Graph(id='analysis-graph', figure=fig),
+        html.Div([
+            html.Button('Change parameters', id='change-params', style={'float':'right', 'marginBottom':'10px'}),
+            html.Div(
+                id='param-container',
+                style={'display':'none', 'float':'right'},
+                children=[
+                    dcc.Input(
+                        id='distance-cycle',
+                        type='number',
+                        placeholder='Distance cycle',
+                        debounce=True,
+                        style={'marginRight':'10px'}
+                    ),
+                    dcc.Input(
+                        id='factor-mad',
+                        type='number',
+                        placeholder='Factor MAD',
+                        debounce=True,
+                        style={'marginRight':'10px'}
+                    ),
+                    html.Button('Valider les paramètres', id='submit-params')
+                ]
+            )
+        ], style={'width':'100%', 'overflow':'hidden'}),
 
         # Storage des move modifs
         dcc.Store(id='move-store', data={

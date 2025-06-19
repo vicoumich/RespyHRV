@@ -4,6 +4,7 @@ from config import analysis_path, useful_channel_asr
 import os
 import json
 from modules.signal_modification import main_modif
+from modules.bdf_reader import update_cycles
 
 def register_callbacks(app):
     # Gestion du bouton de retour des changements des cycles
@@ -126,6 +127,33 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
 
+    @app.callback(
+        Output('param-container', 'style'),
+        Input('change-params', 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def show_params(n_clicks):
+        return {'display':'block', 'float':'right', 'marginBottom':'10px'}
+    
+    @app.callback(
+        Output('param-container', 'style', allow_duplicate=True),
+        Output('analysis-graph', 'figure', allow_duplicate=True),
+        Input('submit-params', 'n_clicks'),
+        State('distance-cycle', 'value'),
+        State('factor-mad', 'value'),
+        prevent_initial_call=True
+    )
+    def submit_params(n_clicks, distance_cycle, factor_mad):
+        # Vérification basique
+        if distance_cycle is None or factor_mad is None:
+            return no_update
+        
+        print("distance: ", distance_cycle, "distance_type: ", type(distance_cycle))
+        print("factor_mad: ", factor_mad, "factor_mad_type: ", type(factor_mad))
+
+        new_fig = update_cycles(distance_cycle, factor_mad)
+
+        return {'display':'none', 'float':'right'}, new_fig
 
 def build_move_response(move_data, pt):
     """

@@ -3,6 +3,8 @@ import physio_piezo
 import numpy as np
 from modules.downsampling import downsample_signal
 import config
+import os
+from modules.ploting import normalised_ecg_resp_plot
 
 def extract_channels(file_name):
     bdf = read_raw_bdf(file_name)
@@ -157,3 +159,51 @@ def extract_timestamps(status, sfreq, target_values=(50, 70), precise_complete=N
 
 def get_cycles_features(resp, srate, cycles, baseline=0.0):
     return physio_piezo.respiration.compute_respiration_cycle_features(resp, srate, cycles, baseline)
+
+def update_cycles(min_cycle_duration=2.0, lambda_mad=1.0):
+    data = config.read_data()
+    resp = data['clean_resp']
+    srate = data['sf']
+    new_cycles = physio_piezo.respiration.detect_cycles_by_extrema(
+        resp, srate, min_cycle_duration, 
+        lambda_mad, clean=True
+    )
+    new_cycles_features = get_cycles_features(
+        resp, srate, new_cycles, 0.0
+    )
+    
+    #  PROPRE ET MAIS TRES LENT
+    data['cycles_features'] = new_cycles_features
+    data['cycles'] = new_cycles
+
+    config.save_data(data.copy())
+    if data['ds_freq'] != None:
+        ds_data = downsample_signal(data['sf'], data['ds_freq'],
+                            data['time'], data['resp'], 
+                            data['clean_resp'], data['ecg'],
+                            data['clean_ecg'], data['micro'], 
+                            data['cycles'], data['ecg_peaks'], 
+                            data['status'], data['cycles_features'])
+        ds_data['time_bpm'] = data['time_bpm'][:] # copy
+        ds_data['instant_bpm'] = data['instant_bpm'][:] # copy
+        data = ds_data
+        fig = normalised_ecg_resp_plot( data[f'time_d'], # modules.ploting.build_fig
+                                        data[f'resp_d'], 
+                                        data[f'clean_resp_d'],
+                                        data[f'cycles_d'],
+                                        data[f'ecg_d'],
+                                        data[f'clean_ecg_d'],
+                                        data[f'ecg_peaks_d'],
+                                        data[f'status_d'],
+                                        micro=data[f'micro_d'],
+                                        is_ds=True, bpm=data['instant_bpm'], 
+                                        time_bpm=data['time_bpm'], cycles_on_bpm=False
+                                        )
+    else: 
+        fig = normalised_ecg_resp_plot( data['time'], data['resp'], 
+                                        data['clean_resp'], data['cycles'], data['ecg'],
+                                        data['clean_ecg'], data['ecg_peaks'], data['status'],
+                                        micro=data['micro'], is_ds=False, cycles_on_bpm=False)
+    return fig
+    
+    
