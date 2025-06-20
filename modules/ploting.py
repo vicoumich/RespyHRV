@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 import numpy as np
+import pandas as pd
 ################################################
 # Voir si j'utilise go.Scattergl ou go.Scatter #
 ################################################
@@ -205,3 +206,70 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
               micro=micro, bpm=bpm, time_bpm=time_bpm, cycles_on_bpm=cycles_on_bpm)
 
 
+def plot_instant_asr(
+    times: np.ndarray, amps: np.ndarray, max_window=10
+) -> go.Figure:
+    """
+        Déssine une valeur déterminante de l'asr,
+        présente sur chaque cycles
+    """
+    df = pd.DataFrame({"times": times, "amps": amps})
+
+    # Figure de base : trace des amplitudes
+    fig = go.Figure(
+        data=[
+            go.Scatter(
+                x=df["times"],
+                y=df["amps"],
+                mode="markers+lines",
+                name="Rising amplitude (RSA)",
+                marker=dict(size=6, opacity=0.6),
+            ),
+            # Trace de la moyenne mobile initiale (window=1)
+            go.Scatter(
+                x=df["times"],
+                y=df["amps"].rolling(window=1, center=True).mean(),
+                mode="lines",
+                name="MA (window=1)",
+                line=dict(width=3, color="darkorange"),
+            )
+        ],
+        layout=go.Layout(
+            title="RSA evolution in time (moving average window slider)",
+            xaxis_title="Time (s)",
+            yaxis_title="Amplitude RSA (bpm)",
+            template="plotly_white",
+            sliders=[{
+                "active": 0,
+                "pad": {"t": 50},
+                "currentvalue": {"prefix": "Window size: "},
+                "steps": [
+                    {
+                        "label": str(w),
+                        "method": "animate",
+                        "args": [
+                            [f"frame{w}"],
+                            {"mode": "immediate", "frame": {"duration": 0}, "transition": {"duration": 0}}
+                        ]
+                    }
+                    for w in range(1, max_window + 1)
+                ]
+            }]
+        ),
+        frames=[
+            go.Frame(
+                data=[
+                    # Les mêmes deux traces, raw et MA(w)
+                    go.Scatter(x=df["times"], y=df["amps"]), 
+                    go.Scatter(
+                        x=df["times"],
+                        y=df["amps"].rolling(window=w, center=True).mean()
+                    )
+                ],
+                name=f"frame{w}"
+            )
+            for w in range(1, max_window + 1)
+        ]
+    )
+
+    return fig
