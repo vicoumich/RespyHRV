@@ -207,7 +207,7 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
 
 
 def plot_instant_asr(
-    times: np.ndarray, amps: np.ndarray, max_window=10
+    times: np.ndarray, amps: np.ndarray, max_window=10, feature='RSA'
 ) -> go.Figure:
     """
         Déssine une valeur déterminante de l'asr,
@@ -222,7 +222,7 @@ def plot_instant_asr(
                 x=df["times"],
                 y=df["amps"],
                 mode="markers+lines",
-                name="Rising amplitude (RSA)",
+                name=f"{feature} (RSA)",
                 marker=dict(size=6, opacity=0.6),
             ),
             # Trace de la moyenne mobile initiale (window=1)
@@ -237,7 +237,7 @@ def plot_instant_asr(
         layout=go.Layout(
             title="RSA evolution in time (moving average window slider)",
             xaxis_title="Time (s)",
-            yaxis_title="Amplitude RSA (bpm)",
+            yaxis_title=f"{feature} (bpm)",
             template="plotly_white",
             sliders=[{
                 "active": 0,

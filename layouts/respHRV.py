@@ -6,6 +6,8 @@ from config import is_data
 from modules.asr import get_asr_data
 from modules.ploting import plot_instant_asr
 
+asr_features = ['peak_value', 'trough_value', 'rising_amplitude',
+                'decay_amplitude', 'rising_slope', 'decay_slope']
 def get_layout():
     missing = []
     # for name in useful_channel_asr:
@@ -18,12 +20,19 @@ def get_layout():
             html.H1("Go back to /home page and drag and drop a bdf file.")
             )
     fig = draw_asr_instant()
-    return html.Div(
-        [
-            html.H2("Visualisation du signal"),
-            dcc.Graph(id='analysis-graph', figure=fig)
-        ]
-    )
+    return html.Div([
+    html.H2("Visualisation du signal"),
+    html.Div([
+        dcc.Graph(id='analysis-graph', figure=fig, style={'flex': '1'}),
+        dcc.Dropdown(
+            id='my-dropdown',
+            options=[{'label': opt, 'value': opt} for opt in asr_features],
+            value=asr_features[0],
+            clearable=False,
+            style={'width': '200px', 'marginLeft': '20px'}
+        )
+    ], style={'display': 'flex', 'alignItems': 'flex-start'})
+])
     
 
 
