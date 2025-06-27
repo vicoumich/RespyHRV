@@ -123,11 +123,17 @@ def main_modif(data: dict) -> str:
             # Expi avant inspi = soit l'expi d'avant soit 0
             first_expi = new_cycles.iloc[index_to_move - 1]['expi_time'] if index_to_move > 0 else 0
             second_expi = current_cycle['expi_time']
+            # debug
+            # print(f"first = {first_expi}, second = {new_inspi}, new = {second_expi}")
+            # fin debug
             if first_expi < new_inspi < second_expi:
                 new_cycles.at[index_to_move, 'inspi_time'] = new_inspi
                 # Modification du nextinspi précédent si on est pas au premier cycle
                 if first_expi > 0:
-                    new_cycles.at[index_to_move, 'next_inspi_time'] = new_inspi
+                    new_cycles.at[index_to_move - 1, 'next_inspi_time'] = new_inspi
+                # debug
+                # print("\n\ncycles courrant: ", new_cycles.iloc[index_to_move], "\ncycle précédent: ", new_cycles.iloc[index_to_move - 1])
+                # fin debug
             else:
                 if first_expi >= new_inspi:
                     error = build_error('move', resp_type, first_expi, new_inspi)
@@ -213,9 +219,21 @@ def main_modif(data: dict) -> str:
     # debug
     # print(data['cycles_features'], "\n\n", type(data['cycles_features']))
     # fin debug
-    data['cycles_features'] = compute_respiration_cycle_features(data['clean_resp'], data['sf'], data['cycles'], 0.0)
 
-    save_data(data)
+    
+    # debug
+    # check1 = data['cycles'][:,0] <= data['cycles'][:,1]
+    # check2 = data['cycles'][:,1] <= data['cycles'][:,2]
+    # print("inspi <= expi", check1)
+    # print("\expi <= next_inspi", check2)
+    
+    try:
+        data['cycles_features'] = compute_respiration_cycle_features(data['clean_resp'], data['sf'], data['cycles'], 0.0)
+        save_data(data)
+    except:
+        raise "Erreur inattendue dans la modification et la sauvegarde des cycles"
+    # fin debug
+    
     
     if error_log == []:
         result = "No issues in the modification process"

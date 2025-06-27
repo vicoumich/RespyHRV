@@ -29,5 +29,5 @@ def get_layout():
 
 def draw_asr_instant():
     time, rsa_cycles, cyclic_cardiac_rate = get_asr_data()
-    return plot_instant_asr(rsa_cycles['peak_time'], rsa_cycles['rising_amplitude'], 20)
+    return plot_instant_asr(rsa_cycles['peak_time'], rsa_cycles['rising_slope'], 20)
         
