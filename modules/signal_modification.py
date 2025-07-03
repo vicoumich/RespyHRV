@@ -2,6 +2,7 @@ from config import read_data, save_data
 import pandas as pd
 import numpy as np
 from physio_piezo.respiration import compute_respiration_cycle_features
+from physio_piezo.ecg import compute_instantaneous_rate
 def main_modif(data: dict) -> str:
     """
         Fonction de modification des signaux en fonction des
@@ -64,6 +65,17 @@ def main_modif(data: dict) -> str:
                         }
                     }
                 ]
+            },
+            "delete_repeak": {
+                "time": null,
+                "peaks": [
+                    {
+                        "index": 230,
+                        "curve": 6,
+                        "x": 205.44140625,
+                        "y": 1.8701320392137721
+                    }
+                ]
             }
         }
 
@@ -74,10 +86,11 @@ def main_modif(data: dict) -> str:
     modif_move = data["move_data"]["pairs"]
     modif_delete = data["delete_data"]["pairs"]
     modif_add = data["add_data"]["pairs"]
+    modif_delete_rpeak = data["delete_rpeak"]["peaks"]
     data = read_data()
 
     new_cycles = data['cycles_features'].copy()
-
+    new_rpeaks = data['ecg_peaks'].copy()
     # Correspondance id traces et expi/inspi
     trace_label = {2: 'inspi', 3: 'expi'}
     opposit_resp = {'inspi': 'expi', 'expi': 'inspi'}
@@ -211,10 +224,28 @@ def main_modif(data: dict) -> str:
                 new_row.at[0, 'next_inspi_time'] = old_next_inspi
                 new_cycles = _insert_row(new_cycles, new_row, index)
 
-    # Passage de données temporal à index dans le signal
+
+    # Suppression de pics-R
+    # Checking que chaque suppression n'y est qu'une fois
+    indexes = [peak['index'] for peak in modif_delete_rpeak]
+    for peak in modif_delete_rpeak:
+        try:
+            # L'index ne change pas en fonction meme si on supprime des lignes
+            new_rpeaks = new_rpeaks.drop(peak['index'])
+        except:
+            error_log.append(f"Erreur lors de la suppression du pics-R {peak}")
+    new_rpeaks = new_rpeaks.reset_index(drop=True)
+    instant_bpm = compute_instantaneous_rate(
+        new_rpeaks, data['time_bpm'], units='bpm', interpolation_kind='linear'
+    )
+    data['instant_bpm'] = instant_bpm
+
+
+    # Passage de données temporel à index dans le signal
     data['cycles'] = new_cycles[["inspi_time", "expi_time", "next_inspi_time"]].to_numpy()
     data['cycles'] = (data['cycles'] * data['sf']).astype(int)
     # Sauvegarde des modifications valides
+    data['ecg_peaks'] = new_rpeaks
 
     # debug
     # print(data['cycles_features'], "\n\n", type(data['cycles_features']))

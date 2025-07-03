@@ -101,7 +101,7 @@ def get_layout():
         }),
 
         dcc.Store(id='delete-Rpeak-store', data={
-           'time': None,
+        #    'time': None,
            'peaks': []
         }),
 

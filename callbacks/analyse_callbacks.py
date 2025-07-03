@@ -14,13 +14,15 @@ def register_callbacks(app):
         State('move-store', 'data'),
         State('delete-store', 'data'),
         State('add-store', 'data'),
+        State('delete-Rpeak-store', 'data'),
         prevent_initial_call=True
     )
-    def on_validate_cycles(n_clicks, move_data, delete_data, add_data):
+    def on_validate_cycles(n_clicks, move_data, delete_data, add_data, delete_rpeak_data):
         modif_data = {
             'move_data': move_data,
             'delete_data': delete_data,
-            'add_data': add_data
+            'add_data': add_data,
+            'delete_rpeak': delete_rpeak_data
         }
         print(json.dumps(modif_data, indent=4))
         print(main_modif(modif_data))
