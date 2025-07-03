@@ -10,8 +10,11 @@ import pandas as pd
 # go.Scattergl lague énormément quand sampling rate > 256
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
-               title="Cycles respiratoires", is_ds=False, status=None, 
+               title="Signals", is_ds=False, status=None, 
                micro=None, bpm=None, time_bpm=None, cycles_on_bpm=True) -> go.Figure:
+    """
+        Génère un plot avec les signaux passés en paramètre
+    """
     # status_labels = ['start', 'end', 'start_stress', 'end_stress', 'start_stress_50']
     fig=go.Figure()
 
@@ -33,10 +36,10 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             #     annotation_position="bottom right")
         # print(status)
         for i in range(len(status[50])):
-            label_title = "stress" if (i % 2) != 0 else "repos"
-            fig.add_vline(x=time[status[50][i]], annotation_text=f"Début {label_title}", 
+            label_title = "stress" if (i % 2) != 0 else "rest"
+            fig.add_vline(x=time[status[50][i]], annotation_text=f"Start {label_title}", 
                 annotation_position="bottom right")
-            fig.add_vline(x=time[status[70][i]], annotation_text=f"Fin {label_title}", 
+            fig.add_vline(x=time[status[70][i]], annotation_text=f"End {label_title}", 
                 annotation_position="bottom left")
         
     if not(init_signal is None):
@@ -45,7 +48,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time,
             y=init_signal,
             mode="lines",
-            name="Respiration brute",
+            name="Respiration",
             line=dict(color="blue"),
             # hoverinfo='skip'
         ))
@@ -56,7 +59,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time,
             y=process_signal,
             mode="lines",
-            name="Respiration traitée",
+            name="Filtered Respiration",
             line=dict(color="orange"),
             # hoverinfo='skip'
         ))
@@ -67,7 +70,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time[cycles[:, 0]],
             y=process_signal[cycles[:, 0]],
             mode='markers',
-            name='Minima (inspiration)',
+            name='Minima (start inspiration)',
             marker=dict(color='green', size=6, symbol='circle'),
             # hoverinfo='text',  # émet l’infobulle pour ce point
             # hovertext=['Minima à {:.2f}s'.format(time[i]) for i in cycles[:,0]]
@@ -78,7 +81,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time[cycles[:, 1]],
             y=process_signal[cycles[:, 1]],
             mode='markers',
-            name='Maxima (expiration)',
+            name='Maxima (start expiration)',
             marker=dict(color='red', size=6, symbol='circle'),
             # hoverinfo='text',  # émet l’infobulle pour ce point
             # hovertext=['Minima à {:.2f}s'.format(time[i]) for i in cycles[:,1]]
@@ -110,7 +113,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             y=ecg2,
             mode='lines',
             name="ECG",
-            line=dict(color="green")
+            line=dict(color="#FF5900"),
         ))
     
     if not(clean_ecg2 is None):
@@ -118,7 +121,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time,
             y=clean_ecg2,
             mode='lines',
-            name="ECG clean",
+            name="ECG filtered",
             line=dict(color='red')
         ))
     
@@ -129,7 +132,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time[r_spikes],
             y=y,
             mode='markers',
-            name="R spikes",
+            name="R-peaks",
             marker=dict(color='black')
         ))
 
@@ -150,7 +153,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             x=time_bpm,
             y=bpm,
             mode='lines',
-            name='Fréquence cardiaque instantanée',
+            name='Instant HR',
             line=dict(color="green")
         ))
 
@@ -158,7 +161,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
     fig.update_layout(
         title=title,
         xaxis=dict(
-            title="Temps (s)",
+            title="Time (s)",
             type="linear",
             rangeslider=dict(visible=True),
         ),
@@ -202,15 +205,15 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
 
     return build_fig(time, resp, processed_resp, cycles, 
               ecg, processed_ecg, r_spikes['peak_index'], 
-              title="Respiration et ECG traités", status=status, is_ds=is_ds,
+              title="", status=status, is_ds=is_ds,
               micro=micro, bpm=bpm, time_bpm=time_bpm, cycles_on_bpm=cycles_on_bpm)
 
 
 def plot_instant_asr(
-    times: np.ndarray, amps: np.ndarray, max_window=10, feature='RSA'
+    times: np.ndarray, amps: np.ndarray, max_window=10, feature='RSA', status=None, time=None
 ) -> go.Figure:
     """
-        Déssine une valeur déterminante de l'asr,
+        Déssine une valeur déterminante de la respHRV,
         présente sur chaque cycles
     """
     df = pd.DataFrame({"times": times, "amps": amps})
@@ -222,7 +225,7 @@ def plot_instant_asr(
                 x=df["times"],
                 y=df["amps"],
                 mode="markers+lines",
-                name=f"{feature} (RSA)",
+                name=f"{feature} (respHRV)",
                 marker=dict(size=6, opacity=0.6),
             ),
             # Trace de la moyenne mobile initiale (window=1)
@@ -230,12 +233,12 @@ def plot_instant_asr(
                 x=df["times"],
                 y=df["amps"].rolling(window=1, center=True).mean(),
                 mode="lines",
-                name="MA (window=1)",
+                name="MA",
                 line=dict(width=3, color="darkorange"),
             )
         ],
         layout=go.Layout(
-            title="RSA evolution in time (moving average window slider)",
+            title="respHRV evolution in time (moving average window slider)",
             xaxis_title="Time (s)",
             yaxis_title=f"{feature} (bpm)",
             template="plotly_white",
@@ -271,5 +274,12 @@ def plot_instant_asr(
             for w in range(1, max_window + 1)
         ]
     )
-
+    
+    if status != None:
+        for i in range(len(status[50])):
+            label_title = "stress" if (i % 2) != 0 else "rest"
+            fig.add_vline(x=time[status[50][i]], annotation_text=f"Start {label_title}", 
+                annotation_position="bottom right")
+            fig.add_vline(x=time[status[70][i]], annotation_text=f"End {label_title}", 
+                annotation_position="bottom left")
     return fig

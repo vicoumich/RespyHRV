@@ -10,5 +10,8 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
     def on_feature(feature):
-        time, rsa_cycles, cyclic_cardiac_rate = get_asr_data()
-        return plot_instant_asr(rsa_cycles['peak_time'], rsa_cycles[feature], 20, feature)
+        data = get_asr_data(return_status=True)
+        return plot_instant_asr(
+            data['rsa_cycles']['peak_time'], data['rsa_cycles']['rising_amplitude'],
+            20, feature, status=data['status'], time=data['time']
+        )

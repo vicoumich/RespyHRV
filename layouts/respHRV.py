@@ -21,7 +21,7 @@ def get_layout():
             )
     fig = draw_asr_instant()
     return html.Div([
-    html.H2("Visualisation du signal"),
+    html.H2("respHRV evolution"),
     html.Div([
         dcc.Graph(id='analysis-graph', figure=fig, style={'flex': '1'}),
         dcc.Dropdown(
@@ -37,6 +37,9 @@ def get_layout():
 
 
 def draw_asr_instant():
-    time, rsa_cycles, cyclic_cardiac_rate = get_asr_data()
-    return plot_instant_asr(rsa_cycles['peak_time'], rsa_cycles['rising_slope'], 20)
+    data = get_asr_data(return_status=True)
+    return plot_instant_asr(
+        data['rsa_cycles']['peak_time'], data['rsa_cycles']['rising_amplitude'],
+        20, status=data['status'], time=data['time']
+    )
         

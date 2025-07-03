@@ -51,7 +51,7 @@ def get_layout():
     # _save_for_asr(channels=data)
 
     return html.Div([
-        html.H2("Visualisation du signal"),
+        html.H2("Signals Visualisation"),
         dcc.Graph(id='analysis-graph', figure=fig),
         html.Div([
             html.Button('Change parameters', id='change-params', style={'float':'right', 'marginBottom':'10px'}),
@@ -73,7 +73,7 @@ def get_layout():
                         debounce=True,
                         style={'marginRight':'10px'}
                     ),
-                    html.Button('Valider les paramètres', id='submit-params')
+                    html.Button('Apply parameters', id='submit-params')
                 ]
             )
         ], style={'width':'100%', 'overflow':'hidden'}),
@@ -100,12 +100,18 @@ def get_layout():
             'pairs': []               # liste de {start, end}
         }),
 
+        dcc.Store(id='delete-Rpeak-store', data={
+           'time': None,
+           'peaks': []
+        }),
+
         dcc.RadioItems(
             id='cleaning-mode',
             options=[
                 {'label': 'Move', 'value': 'move'}, 
                 {'label': 'Delete', 'value': 'delete'},
-                {'label': 'Add', 'value': 'add'}
+                {'label': 'Add', 'value': 'add'},
+                {'label': 'Delete R-peak', 'value': 'delete-Rpeak'}
             ],
             inline=True
         ),
@@ -116,7 +122,7 @@ def get_layout():
         html.Br(),
         html.Div(id='log'),
         html.Br(),
-        html.Button('Valider modifications', id='btn-submit'),
+        html.Button('Apply modifications', id='btn-submit'),
         html.Div(id='channels-asr')
     ])
     

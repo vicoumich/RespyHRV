@@ -59,6 +59,11 @@ def register_callbacks(app):
                     inline=True
                 )
             ]
+        
+        if mode == 'delete-Rpeak':
+            # si mode add
+            return "Click on a Rpic to delete it"
+        
         return mode
         
     
@@ -68,15 +73,17 @@ def register_callbacks(app):
         Output('move-store', 'data'),
         Output('delete-store', 'data'),
         Output('add-store', 'data', allow_duplicate=True),
+        Output('delete-Rpeak-store', 'data'),
         Output('log',   'children'),
         Input('analysis-graph', 'clickData'),
         State('cleaning-mode', 'value'),
         State('move-store',    'data'),
         State('delete-store',  'data'), 
         State('add-store', 'data'),
+        State('delete-Rpeak-store', 'data'),
         prevent_initial_call=True
     )
-    def handle_plot_click(clickData, mode, move_data, delete_data, add_data):
+    def handle_plot_click(clickData, mode, move_data, delete_data, add_data, delete_Rpeak_data):
         # if mode != 'move' or clickData is None:
         #     return move_data, no_update
         
@@ -90,7 +97,15 @@ def register_callbacks(app):
             delete_data= build_delete_response(delete_data, pt)
         if mode == 'add':
             add_data= build_add_response(add_data, pt)
-        children = show_modifs(move_data['pairs'], delete_data['pairs'], add_data['pairs'])
+        if mode == 'delete-Rpeak':
+            delete_Rpeak_data = build_delete_Rpeak_response(delete_Rpeak_data, pt)
+        # debug
+        print(f"move: {move_data} \n delete_data: {delete_data} \n add_data: {add_data} \n deleteRpeak: {delete_Rpeak_data}")
+        # fin debug
+        children = show_modifs(
+            move_data['pairs'], delete_data['pairs'],
+             add_data['pairs'], delete_Rpeak_data['peaks']
+        )
         # debug
         print('\n')
         print("move data : ", move_data)
@@ -98,7 +113,7 @@ def register_callbacks(app):
         print("add data : ", add_data)
         print('\n')
         # fin debug
-        return move_data, delete_data, add_data, children
+        return move_data, delete_data, add_data, delete_Rpeak_data, children
 
     # Gestion du choix du type de point à ajouter
     @app.callback(
@@ -114,8 +129,8 @@ def register_callbacks(app):
 
     app.clientside_callback(
         """
-        function(mode, moveData, deleteData, addData, fig) {
-            return window.dash_clientside.clientside.toggle_traces(mode, moveData, deleteData, addData, fig);
+        function(mode, moveData, deleteData, addData, rpeakData, fig) {
+            return window.dash_clientside.clientside.toggle_traces(mode, moveData, deleteData, addData, rpeakData, fig);
         }
         """,
         Output('analysis-graph', 'figure'),
@@ -123,6 +138,7 @@ def register_callbacks(app):
         Input('move-store', 'data'),
         Input('delete-store', 'data'),
         Input('add-store', 'data'),
+        Input('delete-Rpeak-store', 'data'),
         State('analysis-graph', 'figure'),
         prevent_initial_call=True
     )
@@ -267,12 +283,21 @@ def build_add_response(add_data, pt):
 
         return add_data
 
+def build_delete_Rpeak_response(delete_Rpeak_data, pt):
+    delete_Rpeak_data['peaks'].append({
+        'index': pt['pointIndex'],
+        'curve': pt['curveNumber'],
+        'time': pt['x']
+    })
+    return delete_Rpeak_data
+    
 
-def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
+def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[], delete_peaks=[]):
     children = []
     move_title = html.Div("Moves: ")
-    delete_title = html.Div("Suppressions: ")
+    delete_title = html.Div("Deletions: ")
     add_title = html.Div("Additions: ")
+    delete_Rpeaks_title = html.Div("R-peaks deletions: ")
 
     children.append(move_title)
     for pair in move_pairs:
@@ -285,4 +310,8 @@ def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[]):
     children.append(add_title)
     for pair in add_pairs:
         children.append(html.Div(f"+ inspi: {pair['inspi']['x_inspi']:.2f}s & expi: {pair['expi']['x_expi']:.2f}s"))
+
+    children.append(delete_Rpeaks_title)
+    for peak in delete_peaks:
+        children.append(html.Div(f"✕ R-pic: {peak['time']:.2f}s"))
     return children    

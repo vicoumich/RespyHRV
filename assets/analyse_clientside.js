@@ -4,7 +4,7 @@ window.dash_clientside.clientside = {
   // Fonction appelée par le clientside_callback Dash
   // Inputs : cleaning_mode (string), existing figure (JS object)
   // Returns : nouvelle figure modifiée
-toggle_traces: function(mode, moveData, deleteData, addData, fig) {
+toggle_traces: function(mode, moveData, deleteData, addData, rpeakData, fig) {
     // Correspondance inspi/expi et id de traces
 
     // phase start si pas de phase
@@ -15,7 +15,7 @@ toggle_traces: function(mode, moveData, deleteData, addData, fig) {
     // deep clone
     const newFig = JSON.parse(JSON.stringify(fig));
     newFig.data.forEach(trace => {
-      if (mode === 'move' && phase == 'start') {
+      if ((mode === 'move' && phase == 'start') || mode == 'delete-Rpeak') {
         // la ligne principale ne répond pas au hover
         if (trace.mode && trace.mode.includes('lines')) {
           trace.hoverinfo = 'skip';
