@@ -287,7 +287,8 @@ def build_delete_Rpeak_response(delete_Rpeak_data, pt):
     delete_Rpeak_data['peaks'].append({
         'index': pt['pointIndex'],
         'curve': pt['curveNumber'],
-        'time': pt['x']
+        'x': pt['x'],
+        'y': pt['y']
     })
     return delete_Rpeak_data
     
@@ -313,5 +314,5 @@ def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[], delete_peaks=[]):
 
     children.append(delete_Rpeaks_title)
     for peak in delete_peaks:
-        children.append(html.Div(f"✕ R-pic: {peak['time']:.2f}s"))
+        children.append(html.Div(f"✕ R-pic: {peak['x']:.2f}s"))
     return children    

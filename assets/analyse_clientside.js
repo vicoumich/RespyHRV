@@ -135,6 +135,17 @@ toggle_traces: function(mode, moveData, deleteData, addData, rpeakData, fig) {
         showlegend: false
         });
     });
+    (rpeakData.peaks || []).forEach((peak, i) => {
+      newFig.data.push({
+        x: [peak.x],
+        y: [peak.y],
+        mode: 'markers',
+        name: `Move_old_${i+1}`,
+        marker: { color: "black", size: 10, opacity: 0.3 },
+        hoverinfo: 'skip',
+        showlegend: false
+      });
+    })
     return newFig;
     }
 };
