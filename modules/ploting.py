@@ -183,6 +183,11 @@ def build_fig(time=None, init_signal=None, process_signal=None,
         margin=dict(l=40, r=20, t=50, b=40),
         dragmode="zoom"
     )
+    to_show = ['Filtered Respiration', 'Instant HR', 'Maxima (start expiration)', 'Minima (start inspiration)']
+    for trace in fig.data:
+        # Remplacez ces noms par ceux que vous voulez cacher au départ
+        if not (trace.name in to_show):
+            trace.visible = 'legendonly'
     return fig
 
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
