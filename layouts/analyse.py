@@ -20,6 +20,7 @@ def get_layout():
     
     selected_channels = session_info['selected_channels']
     file_path = session_info['last_file']
+    filename = session_info['last_file'].split('\\')[-1].split('.')[0]
 
     # Fréquence de down Sample entrée dans la GUI
     ds_freq   = float(session_info['ds_freq']) if session_info['ds_freq'] != 'None' else None
@@ -38,14 +39,16 @@ def get_layout():
                                         data[f'status_d'],
                                         micro=data[f'micro_d'],
                                         is_ds=True, bpm=data['instant_bpm'], 
-                                        time_bpm=data['time_bpm'], cycles_on_bpm=False
+                                        gsr=data['gsr_d'],
+                                        time_bpm=data['time_bpm'], cycles_on_bpm=False,
+                                        title=filename
                                         )
     else: 
         data = modules.bdf_reader.extract_signals(file_path, selected_channels, ds_freq)
         fig = modules.ploting.normalised_ecg_resp_plot(data['time'], data['resp'], 
                                         data['clean_resp'], data['cycles'], data['ecg'],
                                         data['clean_ecg'], data['ecg_peaks'], data['status'],
-                                        micro=data['micro'], is_ds=False, cycles_on_bpm=False)
+                                        micro=data['micro'], gsr=data['gsr'], is_ds=False, cycles_on_bpm=False)
 
     # Sauvegarde des données calcul et visu de l'asr
     # _save_for_asr(channels=data)

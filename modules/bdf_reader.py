@@ -83,6 +83,9 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         units='bpm', interpolation_kind='linear'
     )
 
+    # Extraction de la GSR
+    gsr = bdf[channels['gsr']][0].ravel()
+
     # downsample = downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro,
     #                                cycles, ecg_peaks, status)
     
@@ -101,6 +104,7 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
         'cycles_features':cycles_features,
         'time_bpm':time_bpm,
         'instant_bpm': instant_bpm,
+        'gsr': gsr
         # 'downsample': downsample, 
     }
     # Sauvegarde des cannaux lue
@@ -110,15 +114,20 @@ def extract_signals(file_name: str, channels: dict, ds_freq=None):
 
 def get_downsampled_signals(file_name: str, channels: dict, ds_freq=None):
     data = extract_signals(file_name, channels, ds_freq)
+    print(data)
     # debug
     # print("Dans get_downsampled : ", data.keys())
     # fin debug
+    ##########################################
+    ## Il faudrait juste lui filler le DICT ##
+    ##########################################
     ds_data = downsample_signal(data['sf'], ds_freq,
                             data['time'], data['resp'], 
                             data['clean_resp'], data['ecg'],
                             data['clean_ecg'], data['micro'], 
                             data['cycles'], data['ecg_peaks'], 
-                            data['status'], data['cycles_features'])
+                            data['status'], data['cycles_features'],
+                            data['gsr'])
     ds_data['time_bpm'] = data['time_bpm'][:] # copy
     ds_data['instant_bpm'] = data['instant_bpm'][:] # copy
     return ds_data
@@ -160,10 +169,14 @@ def extract_timestamps(status, sfreq, target_values=(50, 70), precise_complete=N
 def get_cycles_features(resp, srate, cycles, baseline=0.0):
     return physio_piezo.respiration.compute_respiration_cycle_features(resp, srate, cycles, baseline)
 
-def update_cycles(min_cycle_duration=2.0, lambda_mad=1.0):
+def update_cycles(min_cycle_duration=2.0, lambda_mad=1.0, title="Signals"):
     data = config.read_data()
     resp = data['clean_resp']
     srate = data['sf']
+    # debug
+    print("\n\n\nAAAAAAAAAAAAAAAAAAAAAAAA\n\n\n")
+    print(data)
+    # fin debug
     new_cycles = physio_piezo.respiration.detect_cycles_by_extrema(
         resp, srate, min_cycle_duration, 
         lambda_mad, clean=True
@@ -183,7 +196,8 @@ def update_cycles(min_cycle_duration=2.0, lambda_mad=1.0):
                             data['clean_resp'], data['ecg'],
                             data['clean_ecg'], data['micro'], 
                             data['cycles'], data['ecg_peaks'], 
-                            data['status'], data['cycles_features'])
+                            data['status'], data['cycles_features'],
+                            gsr=data['gsr'])
         ds_data['time_bpm'] = data['time_bpm'][:] # copy
         ds_data['instant_bpm'] = data['instant_bpm'][:] # copy
         data = ds_data
@@ -196,8 +210,10 @@ def update_cycles(min_cycle_duration=2.0, lambda_mad=1.0):
                                         data[f'ecg_peaks_d'],
                                         data[f'status_d'],
                                         micro=data[f'micro_d'],
-                                        is_ds=True, bpm=data['instant_bpm'], 
-                                        time_bpm=data['time_bpm'], cycles_on_bpm=False
+                                        is_ds=True, bpm=data['instant_bpm'],
+                                        gsr=data['gsr_d'],
+                                        time_bpm=data['time_bpm'], cycles_on_bpm=False,
+                                        title=title
                                         )
     else: 
         fig = normalised_ecg_resp_plot( data['time'], data['resp'], 

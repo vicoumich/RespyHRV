@@ -55,6 +55,15 @@ def get_layout():
 
         html.Br(),
 
+        html.Label("GSR :"),
+        dcc.Dropdown(
+            id='gsr-dropdown',
+            options=[{'label': ch, 'value': ch} for ch in channels],
+            multi=False
+        ),
+
+        html.Br(),
+
         html.Label("DownSampling (dépend du contexte des données, ≤256 recommandé):"),
         dcc.Dropdown(
             id='downsampling-dropdown',

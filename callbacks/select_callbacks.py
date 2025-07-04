@@ -12,10 +12,11 @@ def register_callbacks(app):
         State('resp-dropdown', 'value'),
         State('status-dropdown', 'value'),
         State('micro-dropdown', 'value'),
+        State('gsr-dropdown', 'value'),
         State('downsampling-dropdown', 'value'),
         prevent_initial_call=True
     )
-    def on_validate(n_clicks, ecg, resp, status, micro, ds_freq):
+    def on_validate(n_clicks, ecg, resp, status, micro, gsr, ds_freq):
         # debug
         # print(" Fichier traité:", UPLOAD_TRACKER['last_file'])
         # print(" ECG:", ecg)
@@ -33,6 +34,7 @@ def register_callbacks(app):
         channels['respi'] = resp
         channels['status'] = status
         channels['micro'] = micro
+        channels['gsr'] = gsr
         data['selected_channels'] = channels
         data['ds_freq'] = float(ds_freq) if ds_freq != None else 'None'
 

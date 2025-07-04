@@ -20,7 +20,7 @@ import numpy as np
 
 def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg,
                       clean_ecg, micro, cycles, ecg_peaks, status,
-                      cycles_features):
+                      cycles_features, gsr):
     if ds_freq and ds_freq < sf:
         factor = int(sf // ds_freq)
         time_d = time[::factor]# downsample_signal(time, sf, ds_freq)
@@ -28,7 +28,11 @@ def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg,
         clean_resp_d = clean_resp[::factor] # downsample_signal(clean_resp, sf, ds_freq)
         ecg_d = ecg[::factor] # downsample_signal(ecg, sf, ds_freq)
         clean_ecg_d = clean_ecg[::factor] # downsample_signal(clean_ecg, sf, ds_freq)
-        micro_d = micro[::factor] # if micro != None else None
+        gsr_d = gsr[::factor]
+        if not (micro is None):
+            micro_d = micro[::factor] # if micro != None else None
+        else:
+            micro_d = None
         cycles_d = (cycles // factor).astype(np.int64)
         ecg_peaks_d = (ecg_peaks // factor).astype(np.int64)
         status_d = { k: [int(i // factor) for i in v] for k,v in status.items()} if status != None else None 
@@ -49,7 +53,8 @@ def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg,
             f'ecg_peaks_d': ecg_peaks_d,
             f'status_d': status_d,
             f'micro_d': micro_d,
-            f'cycles_features_d': cycles_features
+            f'cycles_features_d': cycles_features,
+            'gsr_d': gsr_d
         }
     
     else:

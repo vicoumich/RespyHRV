@@ -12,7 +12,7 @@ useful_channel_asr = [
     'resp', 'clean_resp', 'status',
     'time', 'ecg', 'clean_ecg',
     'micro', 'ecg_peaks', 'time_bpm',
-    'instant_bpm', 'cycles'
+    'instant_bpm', 'cycles', 'gsr'
 ]
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')

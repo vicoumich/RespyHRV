@@ -11,7 +11,7 @@ import pandas as pd
 def build_fig(time=None, init_signal=None, process_signal=None,
                cycles=None, ecg2=None, clean_ecg2=None, r_spikes=None, 
                title="Signals", is_ds=False, status=None, 
-               micro=None, bpm=None, time_bpm=None, cycles_on_bpm=True) -> go.Figure:
+               micro=None, bpm=None, time_bpm=None, cycles_on_bpm=True, gsr=None) -> go.Figure:
     """
         Génère un plot avec les signaux passés en paramètre
     """
@@ -156,6 +156,17 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             name='Instant HR',
             line=dict(color="green")
         ))
+    
+    if not(gsr is None):
+        # Courbe originale (bleu)
+        fig.add_trace(scatter_object(
+            x=time,
+            y=gsr,
+            mode="lines",
+            name="GSR",
+            line=dict(color="purple"),
+            # hoverinfo='skip'
+        ))
 
     # Mise en page
     fig.update_layout(
@@ -177,7 +188,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
 def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
                              cycles=None, ecg=None, processed_ecg=None,
                              r_spikes=None, status=None, micro=None, is_ds=True,
-                             bpm=None, time_bpm=None, cycles_on_bpm=True):
+                             bpm=None, time_bpm=None, gsr=None, cycles_on_bpm=True, title="Signals"):
     """
     Normalize data and add différence to plot différent signals on
     a same plotly properly (eg. resp and ecg)
@@ -196,17 +207,21 @@ def normalised_ecg_resp_plot(time: np.ndarray, resp=None, processed_resp=None,
         processed_ecg = 2* ((processed_ecg - np.min(processed_ecg)) / (np.max(processed_ecg) - np.min(processed_ecg)))
 
     if not(micro is None):
-        beta = 6 # if not bpm or not time_bpm else 6
+        beta = 8 # if not bpm or not time_bpm else 6
         micro = 2* ((micro - np.min(micro)) / (np.max(micro) - np.min(micro))) - beta
     
+    if not(gsr is None):
+        beta = 6
+        gsr = 2* ((gsr - np.min(gsr)) / (np.max(gsr) - np.min(gsr))) - beta
+
     if not(bpm is None) and not(time_bpm is None):
         bpm = 2* ((bpm - np.min(bpm)) / (np.max(bpm) - np.min(bpm))) - 4
 
 
     return build_fig(time, resp, processed_resp, cycles, 
               ecg, processed_ecg, r_spikes['peak_index'], 
-              title="", status=status, is_ds=is_ds,
-              micro=micro, bpm=bpm, time_bpm=time_bpm, cycles_on_bpm=cycles_on_bpm)
+              title=title, status=status, is_ds=is_ds,
+              micro=micro, bpm=bpm, time_bpm=time_bpm, gsr=gsr, cycles_on_bpm=cycles_on_bpm)
 
 
 def plot_instant_asr(
