@@ -1,6 +1,6 @@
 from dash import html, dcc
 from dash import dash_table
-from config import clean_session
+from config import clean_session, clean_current_session, get_sessions_names
 """
 Affiche l'input pour fichier bdf et le bouton pour regarder
 les fichiers présents sur le serveur.
@@ -10,11 +10,22 @@ def get_layout():
     # Nettoyage de tous les fichier sutilisés dans
     # une autre session de modification
 
-    clean_session()
+    ######################
+    # NE PAS DECOMMENTER #
+    ######################
+    # clean_session() ####
+    ######################
+    ######################
+
+    clean_current_session()
     return html.Div([
         html.H1("Accueil - Upload de fichier BDF"),
 
         html.Div([
+            dcc.ConfirmDialog(
+                id='confirm-delete',
+                message='A sessions with this name already exists.\nClick OK to override the saved session',
+            ),
             dcc.Upload(
                 id='upload-data',
                 children=html.Div([
@@ -33,7 +44,8 @@ def get_layout():
                 multiple=False
             ),
             html.Div(id='upload-status')
-        ], style={'marginBottom': '40px'})
+        ], style={'marginBottom': '40px'}),
+        generate_sessions_list()
 
         # html.Div([
         #     html.H2("Ou consulter les fichiers existants :"),
@@ -51,3 +63,13 @@ def get_layout():
         #     )
         # ])
     ])
+
+def generate_sessions_list():
+    names = get_sessions_names()[1:]
+    html_list = html.Ul([
+        html.Li(
+            name, 
+            id={'type': 'session-item', 'index': name}            
+        ) for name in names
+    ] + [html.Div(id='dummy-div')], className="session-list")
+    return html_list

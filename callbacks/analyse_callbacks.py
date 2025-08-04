@@ -5,7 +5,7 @@ import os
 import json
 from modules.signal_modification import main_modif
 from modules.bdf_reader import update_cycles
-from config import session_path
+from config import session_path, get_current_session_info
 
 def register_callbacks(app):
     # Gestion du bouton de retour des changements des cycles
@@ -166,9 +166,7 @@ def register_callbacks(app):
         # Vérification basique
         if distance_cycle is None or factor_mad is None:
             return no_update
-        if os.path.exists(session_path):
-            with open(session_path, 'r') as session:
-                session_info = json.load(session)
+        session_info = get_current_session_info()
         filename = session_info['last_file'].split('\\')[-1].split('.')[0]
         print("distance: ", distance_cycle, "distance_type: ", type(distance_cycle))
         print("factor_mad: ", factor_mad, "factor_mad_type: ", type(factor_mad))

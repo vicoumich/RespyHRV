@@ -5,7 +5,7 @@ import modules.bdf_reader
 import modules.ploting
 import numpy as np
 import pandas as pd
-from config import session_path, analysis_path, useful_channel_asr
+from config import get_current_session_name, get_current_session_info # session_path, analysis_path, useful_channel_asr
 
 
 def get_layout():
@@ -13,11 +13,17 @@ def get_layout():
     # debug
     # print('ok')
     # fin debug
-    if os.path.exists(session_path):
-        with open(session_path, 'r') as session:
-            session_info = json.load(session)
-    else: return html.Div([html.H1(f"Aucun fichier session trouvé")])
+    # if os.path.exists(session_path):
+    #     with open(session_path, 'r') as session:
+    #         session_info = json.load(session)
+    # else: return html.Div([html.H1(f"Aucun fichier session trouvé")])
     
+    session_name = get_current_session_name()
+    if session_name == '':
+        return html.Div(["Select or drop a file on ", html.A("/home", href="/home"), "."])
+    session_info = get_current_session_info()
+    
+
     selected_channels = session_info['selected_channels']
     file_path = session_info['last_file']
     filename = session_info['last_file'].split('\\')[-1].split('.')[0]

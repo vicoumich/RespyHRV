@@ -1,7 +1,7 @@
 from dash import Input, State, dcc, Output
 from callbacks.home_callbacks import UPLOAD_TRACKER
 import json
-from config import session_path
+from config import get_current_session_info, set_current_session_info # session_path
 
 
 def register_callbacks(app):
@@ -23,8 +23,9 @@ def register_callbacks(app):
         # print(" RESP:", resp)
         # print(" STATUS:", status)
         # fin debug
-        with open(session_path, 'r') as file:
-            data = json.load(file)
+        data = get_current_session_info()
+        # with open(session_path, 'r') as file:
+        #     data = json.load(file)
         channels = {}
         if len(ecg) > 1:
             channels['ecg1'] = ecg[0]
@@ -39,7 +40,8 @@ def register_callbacks(app):
         data['ds_freq'] = float(ds_freq) if ds_freq != None else 'None'
 
         # Ajout des channels selectionnées dans le json session
-        with open(session_path, 'w') as json_file:
-            json.dump(data, json_file)
-            
+        # with open(session_path, 'w') as json_file:
+        #     json.dump(data, json_file)
+        set_current_session_info(data)
+    
         return dcc.Location(pathname='/analyse', id='redirect-after-select')

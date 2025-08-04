@@ -2,15 +2,18 @@ from dash import html, dcc
 # from callbacks.home_callbacks import UPLOAD_TRACKER
 import json
 import os
-from config import session_path
+from config import get_current_session_info, get_current_session_name
 
 
 def get_layout():
     # Lecture du fichier de session
-    if os.path.exists(session_path):
-        with open(session_path, 'r') as session:
-            channels = json.load(session)['channels']
-    else: channels = []
+    # if os.path.exists(session_path):
+    #     with open(session_path, 'r') as session:
+    #         channels = json.load(session)['channels']
+    # else: channels = []
+    if get_current_session_name() == '':
+        return html.Div(["Select or drop a file on ", html.A("/home", href="/home"), "."])
+    channels = get_current_session_info()['channels']
     # print(channels)
 
     # Fréquences de DownSampling
