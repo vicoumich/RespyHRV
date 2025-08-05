@@ -24,7 +24,7 @@ def get_layout():
         html.Div([
             dcc.ConfirmDialog(
                 id='confirm-delete',
-                message='A sessions with this name already exists.\nClick OK to override the saved session',
+                message='A session with this name already exists.\nClick OK to override the saved session',
             ),
             dcc.Upload(
                 id='upload-data',
@@ -65,7 +65,7 @@ def get_layout():
     ])
 
 def generate_sessions_list():
-    names = get_sessions_names()[1:]
+    names = get_sessions_names() # [1:]
     html_list = html.Ul([
         html.Li(
             name, 

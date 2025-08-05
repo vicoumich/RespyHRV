@@ -72,7 +72,7 @@ def register_callbacks(app: dash.Dash):
             name = get_current_session_name()
             delete_session(name)
             create_session(name, UPLOAD_TRACKER)
-            return 0, no_update
+            return 0, dcc.Location(pathname='/select', id='redirect-after-upload')
         return 0, dcc.Location(pathname='/select', id='redirect-after-upload')
 
     @app.callback(
@@ -96,6 +96,4 @@ def register_callbacks(app: dash.Dash):
             return no_update, dcc.Location(pathname='/analyse', id='redirect-after-upload')
         else:
             return html.H2("No data found for this session, please drop the file again."), no_update
-
-        return None
 

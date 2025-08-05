@@ -148,7 +148,7 @@ def clean_session(
                 print(f"Impossible de supprimer {d} : {e}")
         # on recrée un dossier vide
         os.makedirs(d, exist_ok=True)
-    os.makedirs(analysis_path, exist_ok=True)
+    # os.makedirs(analysis_path, exist_ok=True)
     
 
 def get_sessions_names(directory: str = SESSION_FOLDER) -> list[str]:
