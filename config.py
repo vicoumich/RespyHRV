@@ -96,11 +96,11 @@ def read_data(
         folder=analysis_path, freq_file="freq.json",
         cycles_file="cycles_features.pkl", data_file="extracted_data.pkl",
         ecg_peaks_file="ecg_peaks.pkl", status_file="status.pkl"
-) -> None:
+) -> dict | None:
 
     name = get_current_session_name()
     if name == '':
-        return False
+        return None
     folder         = os.path.join(SESSION_FOLDER, name)
     folder         = os.path.join(folder, "data")
     data_path      = os.path.join(folder, data_file)

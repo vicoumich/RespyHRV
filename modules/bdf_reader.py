@@ -174,8 +174,8 @@ def update_cycles(min_cycle_duration=2.0, lambda_mad=1.0, title="Signals"):
     resp = data['clean_resp']
     srate = data['sf']
     # debug
-    print("\n\n\nAAAAAAAAAAAAAAAAAAAAAAAA\n\n\n")
-    print(data)
+    # print("\n\n\nAAAAAAAAAAAAAAAAAAAAAAAA\n\n\n")
+    # print(data)
     # fin debug
     new_cycles = physio_piezo.respiration.detect_cycles_by_extrema(
         resp, srate, min_cycle_duration, 
