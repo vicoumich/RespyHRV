@@ -303,3 +303,65 @@ def plot_instant_asr(
             fig.add_vline(x=time[status[70][i]], annotation_text=f"End {label_title}", 
                 annotation_position="bottom left")
     return fig
+
+import plotly.graph_objs as go
+
+def plot_filtering(time, signals, max_freqs, raw_resp):
+    """
+    Crée une figure Plotly où chaque fréquence est une trace,
+    et un slider qui rend visible la trace désirée.
+    """
+    fig = go.Figure()
+    fig.add_trace(go.Scattergl(
+            x=time,
+            y=raw_resp,
+            mode="lines",
+            name="Respiration",
+            line=dict(color="blue"),
+            visible=True,
+            hoverinfo='skip'
+            # hoverinfo='skip'
+    ))
+    for i, freq in enumerate(max_freqs):
+        fig.add_trace(
+            go.Scattergl(
+                x = time,
+                y = signals[freq],
+                mode = 'lines',
+                name = f"{freq:.1f} Hz",
+                line=dict(color="orange"),
+                visible = (i == 0),      # seule la première trace est visible au départ
+                hoverinfo='skip'
+            )
+        )
+    
+
+    steps = []
+    for i, freq in enumerate(max_freqs):
+        step = dict(
+            method = "restyle",      
+            args = [
+                {"visible": [                         # 1ère position = raw_resp
+                    True                         # raw_resp visible
+                ] + [j == i for j in range(len(max_freqs))]},
+                
+                {"title": f"Signal à fréquence max = {freq:.1f} Hz"} 
+            ],
+            label = f"{freq:.1f} Hz"
+        )
+        steps.append(step)
+    
+    sliders = [dict(
+        active = 0,
+        pad = {"t": 30},
+        currentvalue = {"prefix": "Fréq max : ", "suffix": " Hz"},
+        steps = steps
+    )]
+    
+    fig.update_layout(
+        xaxis = dict(title="Temps (s)"),
+        yaxis = dict(title="Amplitude"),
+        sliders = sliders
+    )
+    
+    return fig

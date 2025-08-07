@@ -10,12 +10,13 @@ def extract_channels(file_name):
     bdf = read_raw_bdf(file_name)
     return list(bdf.ch_names)
 
-def process_resp(signal, sf: float):
-    signal = physio_piezo.preprocess(signal.copy(), sf, band=[0.05, 1.0], normalize=False)
-    signal = physio_piezo.smooth_signal(signal, sf)
+def process_resp(signal, sf: float, max_freq=0.5):
+    
+    # signal = physio_piezo.smooth_signal(signal, sf, sigma_ms=9.8)
+    signal = physio_piezo.preprocess(signal.copy(), sf, band=[0.05, max_freq], normalize=False)
     return signal
 
-def extract_signals(file_name: str, channels: dict, ds_freq=None):
+def extract_signals(file_name: str=None, channels: dict=None, ds_freq=None):
     """
     Returns ecg, respi, processed respi, sampling rate,
     status and time in seconde.

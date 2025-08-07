@@ -59,3 +59,8 @@ def downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg,
     
     else:
         raise(f"Down sampling rate ({ds_freq}) is over sampling rate({sf})")
+    
+
+def downsample_one_signal(sf: int, ds_freq: int, resp):
+    factor = int(sf // ds_freq)
+    return resp[::factor]

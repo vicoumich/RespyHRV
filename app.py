@@ -1,5 +1,6 @@
 from dash import Dash, html, dcc
-from callbacks import home_callbacks, routing_callbacks, select_callbacks, analyse_callbacks, respHRV_callbacks
+from callbacks import home_callbacks, routing_callbacks, select_callbacks
+from callbacks import  analyse_callbacks, respHRV_callbacks, filtering_callbacks
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 server = app.server
@@ -17,6 +18,7 @@ routing_callbacks.register_callbacks(app)
 select_callbacks.register_callbacks(app)
 analyse_callbacks.register_callbacks(app)
 respHRV_callbacks.register_callbacks(app)
+filtering_callbacks.register_callbacks(app)
 # analyse_callbacks.register_callbacks(app)
 
 if __name__ == '__main__':
