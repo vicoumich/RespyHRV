@@ -10,7 +10,10 @@ from config import session_path, get_current_session_info
 def register_callbacks(app):
     # Gestion du bouton de retour des changements des cycles
     @app.callback(
-        Output('channels-asr', 'children'),
+        Output('move-store', 'data', allow_duplicate=True),
+        Output('delete-store', 'data', allow_duplicate=True),
+        Output('add-store', 'data', allow_duplicate=True),
+        Output('delete-Rpeak-store', 'data', allow_duplicate=True),
         Input('btn-submit', 'n_clicks'),
         State('move-store', 'data'),
         State('delete-store', 'data'),
@@ -25,8 +28,28 @@ def register_callbacks(app):
             'add_data': add_data,
             'delete_rpeak': delete_rpeak_data
         }
-        print(json.dumps(modif_data, indent=4))
-        print(main_modif(modif_data))
+        # print(json.dumps(modif_data, indent=4))
+        main_modif(modif_data)
+        return ({
+            'phase': 'start',         # 'start' ou 'select_resp'
+            'current_cycle': None,    # stocke {x_old, y_old, traceName, pointIndex}
+            'pairs': []               # liste de {old, new}
+        },
+        {
+            'phase': 'start',         # 'start' ou 'end'
+            'start': None,           # stocke {x_start, y_start, traceName, pointIndex}
+            'pairs': []               # liste de {start, end}
+        },
+        {
+            'phase': 'start',
+            'first': None,         # 'expi' ou 'inspi'
+            'point': None,         # x,y
+            'pairs': []               # liste de {start, end}
+        },
+        {
+        #    'time': None,
+           'peaks': []
+        })
 
 
     # Gestion des modes de modification des cycles
@@ -45,8 +68,8 @@ def register_callbacks(app):
         
         if mode == 'delete':
             # si on rentre en mode delete
-            return "Click on the limits of the interval to delete, starting from min"
-        
+            # return "Click on the limits of the interval to delete, starting from min"
+            return "Click on one expiration and 1 inspiration"
         if mode == 'add':
             # si mode add
             # Permet le choix d'ajouter une inspi ou une expi
@@ -225,33 +248,43 @@ def build_move_response(move_data, pt):
     return move_data #, no_update
 
 def build_delete_response(delete_data, pt):
+    trace_label = {2: 'inspi', 3: 'expi'}
+    opposit_resp = {'inspi': 'expi', 'expi': 'inspi'}
     curve_idx   = pt['curveNumber']
     point_index = pt['pointIndex']
     x_clicked   = pt['x']
     y_clicked   = pt['y']
-    trace_name  = pt['curveNumber']
+    trace_id    = pt['curveNumber']
+    trace_name  = trace_label[trace_id]
 
     if delete_data['phase'] == 'start':
-        start = {'x_start': x_clicked, 'y_start': y_clicked}
-        delete_data['start'] = start
+        start = {'x': x_clicked, 'y': y_clicked, 'index': point_index, 'trace': trace_id}
+        delete_data[trace_name] = start
 
-        delete_data['phase'] = 'end'
+        delete_data['phase'] = trace_name
         # log = html.Div("Phase 2 - Cliquez sur le nouveau point sur 'Respiration traitée'")
         return delete_data #, log
     
-    if delete_data['phase'] == 'end':
-        start = delete_data['start']
-        end = {'x_end': x_clicked, 'y_end': y_clicked}
+    if delete_data['phase'] != 'start':
+        phase = delete_data['phase']
+        opposit_phase = opposit_resp[phase]
+        # On reset si il choisi un meme type, eg.(inspi, inspi)
+        if trace_name != opposit_phase:
+            # delete_data['start'] = None
+            delete_data['phase'] = 'start'
+            return delete_data
+        first = delete_data[delete_data['phase']]
+        second = {'x': x_clicked, 'y': y_clicked, 'index': point_index, 'trace': trace_id}
         # Vérification si start est bienavant end
         # switching des valeurs entre end et start si oui
-        if start['x_start'] > end['x_end']:
-            start['x_start'], end['x_end'] = end['x_end'], start['x_start']
-            start['y_start'], end['y_end'] = end['y_end'], start['y_start']
-        delete_data['pairs'].append({'start': start, 'end': end})
+        # if start['x_start'] > end['x_end']:
+        #     start['x_start'], end['x_end'] = end['x_end'], start['x_start']
+        #     start['y_start'], end['y_end'] = end['y_end'], start['y_start']
+        delete_data['pairs'].append({delete_data['phase']: first, opposit_phase: second})
 
-        delete_data['start'] = None
+        # delete_data['start'] = None
         delete_data['phase'] = 'start'
-
+        print(delete_data)
         return delete_data
 
 def build_add_response(add_data, pt):
@@ -310,7 +343,8 @@ def show_modifs(move_pairs=[], delete_pairs=[], add_pairs=[], delete_peaks=[]):
 
     children.append(delete_title)
     for pair in delete_pairs:
-        children.append(html.Div(f"{pair['start']['x_start']:.2f}s - {pair['end']['x_end']:.2f}s"))
+        # children.append(html.Div(f"{pair['start']['x_start']:.2f}s - {pair['end']['x_end']:.2f}s"))
+        children.append(html.Div(f"cycle[inspi: {pair['inspi']['x']}, expi:{pair['expi']['x']}]"))
 
     children.append(add_title)
     for pair in add_pairs:

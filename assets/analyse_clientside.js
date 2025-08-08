@@ -15,7 +15,7 @@ toggle_traces: function(mode, moveData, deleteData, addData, rpeakData, fig) {
     // deep clone
     const newFig = JSON.parse(JSON.stringify(fig));
     newFig.data.forEach(trace => {
-      if ((mode === 'move' && phase == 'start') || mode == 'delete-Rpeak') {
+      if ((mode === 'move' && phase == 'start') || mode == 'delete-Rpeak' || mode == 'delete') {
         // la ligne principale ne répond pas au hover
         if (trace.mode && trace.mode.includes('lines')) {
           trace.hoverinfo = 'skip';
@@ -39,7 +39,8 @@ toggle_traces: function(mode, moveData, deleteData, addData, rpeakData, fig) {
 
     // Suppression des anciens points modifiés pour éviter duplication sur le plot
     newFig.data = newFig.data.filter(t => {
-      return !(t.name && (t.name.startsWith('Move_old') || t.name.startsWith('Move_new')));
+      return !(t.name && (t.name.startsWith('Move_old') || t.name.startsWith('Move_new')) 
+                      || (t.name.startsWith('Deletion')));
     });
 
     // Pour chaque pair old new on les places sur le plot
@@ -76,25 +77,34 @@ toggle_traces: function(mode, moveData, deleteData, addData, rpeakData, fig) {
     newFig.layout.shapes = newFig.layout.shapes || [];
 
     (deleteData.pairs || []).forEach(pair => {
-      const x0 = pair.start.x_start;
-      const x1 = pair.end.x_end;
-
+      const x0 = pair.inspi.x;
+      const y0 = pair.inspi.y;
+      const y1 = pair.expi.y;
+      const x1 = pair.expi.x;
+      const orig_inspi = newFig.data[pair.inspi.trace];
+      const orig_expi = newFig.data[pair.expi.trace];
+      const color_inspi = orig_inspi && orig_inspi.line && orig_inspi.line.color
+                    || (orig_inspi.marker && orig_inspi.marker.color)
+                    || 'black';
+      const color_expi = orig_expi && orig_expi.line && orig_expi.line.color
+                    || (orig_expi.marker && orig_expi.marker.color)
+                    || 'black';
       // Ligne verticale au début de l'intervalle
-      newFig.layout.shapes.push({
-        type: 'line',
-        x0: x0, x1: x0,
-        y0: 0,  y1: 1,
-        xref: 'x', yref: 'paper',
-        line: { color: 'red', width: 2, dash: 'dash' }
+      newFig.data.push({
+        mode: 'markers',
+        x: [x0],
+        y: [y0],
+        name: 'Deletion',
+        marker: { color: color_inspi, size: 10, opacity: 0.3 }
       });
 
       // Ligne verticale à la fin de l'intervalle
-      newFig.layout.shapes.push({
-        type: 'line',
-        x0: x1, x1: x1,
-        y0: 0,  y1: 1,
-        xref: 'x', yref: 'paper',
-        line: { color: 'red', width: 2, dash: 'dash' }
+      newFig.data.push({
+        mode: 'markers',
+        x: [x1],
+        y: [y1],
+        name: 'Deletion',
+        marker: { color: color_expi, size: 10, opacity: 0.3 }
       });
     });
     // Ajout des points "Add"

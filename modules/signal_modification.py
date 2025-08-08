@@ -119,7 +119,7 @@ def main_modif(data: dict) -> str:
             new_expi = new['x_new']
 
             # debug
-            print(f"first = {first_inspi}, second = {second_inspi}, new = {new_expi}")
+            # print(f"first = {first_inspi}, second = {second_inspi}, new = {new_expi}")
             # fin debug
             # Vérification que l'expi reste entre ses deux inspi
             if first_inspi < new_expi < second_inspi:
@@ -240,6 +240,64 @@ def main_modif(data: dict) -> str:
     )
     data['instant_bpm'] = instant_bpm
 
+    print(1)
+    for pair in modif_delete:
+        inspi = pair['inspi']
+        inspi_index = inspi['index']
+        expi  = pair['expi']
+        expi_index = expi['index']
+        arent_same_cycle = abs(inspi_index - expi_index)
+        current_cycle = new_cycles.iloc[expi_index]
+        print(2)
+        # Si ont plus d'un index de différence 
+        if arent_same_cycle > 1:
+            error_log.append(f"inspi: {inspi['x']} et expi:{expi['x']} pas dans le meme cycle")
+            continue
+        if not(arent_same_cycle):
+            print(3)
+            # ordre: inspi -> expi
+            if inspi_index == 0:
+                # si c'est le premier cycle on supprime juste
+                new_cycles = new_cycles.drop(inspi_index)
+            else:
+                # sinon, on supprime et on met le next inspi à la place de celui du cycle précédent
+                current_next_inspi = new_cycles.at[inspi_index, "next_inspi_time"]
+                # debug
+                # print("current next inspi: ",current_next_inspi)
+                # fin debug
+                # Récupération de la position relative et non index
+                pos = new_cycles.index.get_loc(expi_index)
+                prev_index = new_cycles.index[pos - 1]
+                new_cycles.at[prev_index, "next_inspi_time"] = current_next_inspi
+                new_cycles = new_cycles.drop(expi_index)
+                # debug
+                # print("n-1 cycle: ",new_cycles.iloc[expi_index - 1])
+                # print("n+1 cycle: ",new_cycles.iloc[expi_index + 1])
+                # fin debug
+        
+        if arent_same_cycle:
+            # ordre: expi -> inspi 
+            # l'inspi est celle du cycle après l'expi
+            # On remplace next_inspi par inspi actuel
+            current_inspi_time = new_cycles.at[expi_index, "inspi_time"]
+            # debug
+            # print(f"\ncurrent_inspi_time: {current_inspi_time}")
+            # print(f"\navant \n1:{new_cycles.iloc[expi_index + 1]} \n2:{new_cycles.iloc[expi_index]}")
+            # fin debug
+            pos = new_cycles.index.get_loc(expi_index)
+            next_index = new_cycles.index[pos + 1]
+            new_cycles.at[next_index, 'inspi_time'] = current_inspi_time
+            new_cycles = new_cycles.drop(expi_index)
+            # debug
+            # print(f"\naprès \n1:{new_cycles.iloc[expi_index + 1]} \n2:{new_cycles.iloc[expi_index]}")
+            # fin debug
+
+        
+    # debug
+    # index = 20# modif_delete[0]['inspi']['index']
+    # alpha = 3
+    # [print(new_cycles.iloc[i]) for i in range(index - alpha, index + alpha)]
+    # fin debug
 
     # Passage de données temporel à index dans le signal
     data['cycles'] = new_cycles[["inspi_time", "expi_time", "next_inspi_time"]].to_numpy()
@@ -261,8 +319,9 @@ def main_modif(data: dict) -> str:
     try:
         data['cycles_features'] = compute_respiration_cycle_features(data['clean_resp'], data['sf'], data['cycles'], 0.0)
         save_data(data)
-    except:
-        raise "Erreur inattendue dans la modification et la sauvegarde des cycles"
+    except Exception as e:
+        print( f"Erreur inattendue dans la modification et la sauvegarde des cycles {e}")
+        raise "erreur lors de la modif"
     # fin debug
     
     
