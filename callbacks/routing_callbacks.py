@@ -5,6 +5,7 @@ from layouts.select import get_layout as select_layout
 from layouts.analyse import get_layout as analyse_layout
 from layouts.respHRV import get_layout as respHRV_layout
 from layouts.filtering import get_layout as filtering_layout
+from layouts.gsr import get_layout as gsr_layout
 
 """
 Callback appellé lors d'une modification de la valeur de l'url.
@@ -27,5 +28,7 @@ def register_callbacks(app):
             return respHRV_layout()
         elif pathname == '/filtering':
             return filtering_layout()
+        elif pathname == '/gsr':
+            return gsr_layout()
         else:
             return home_layout()

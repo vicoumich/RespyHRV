@@ -27,7 +27,7 @@ def get_layout():
         dcc.Dropdown(
             id='my-dropdown',
             options=[{'label': opt, 'value': opt} for opt in asr_features],
-            value=asr_features[0],
+            value=asr_features[2],
             clearable=False,
             style={'width': '200px', 'marginLeft': '20px'}
         )

@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
+import config
 ################################################
 # Voir si j'utilise go.Scattergl ou go.Scatter #
 ################################################
@@ -165,7 +166,7 @@ def build_fig(time=None, init_signal=None, process_signal=None,
             mode="lines",
             name="GSR",
             line=dict(color="purple"),
-            # hoverinfo='skip'
+            hoverinfo='skip'
         ))
 
     # Mise en page
@@ -365,3 +366,176 @@ def plot_filtering(time, signals, max_freqs, raw_resp):
     )
     
     return fig
+
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+
+import neurokit2 as nk
+
+
+def gsr_plot_with_metrics(
+    gsr_raw: pd.Series = None,
+    sampling_rate: float = None,
+    target_fs: float = None,
+):
+    """
+    Parameters
+    ----------
+    gsr_raw : pd.Series
+        Colonne pandas contenant le signal GSR brut (EDA).
+    sampling_rate : float
+        Fréquence d'échantillonnage (Hz) du signal gsr_raw.
+    target_fs : float, optional
+        Fréquence d'échantillonnage (Hz) à utiliser pour l'affichage (downsampling), par défaut 10 Hz.
+
+    Returns
+    -------
+    fig : plotly.graph_objects.Figure
+        Figure Plotly avec le GSR downsamplé et les pics SCR marqués.
+    metrics : pd.DataFrame
+        Métriques EDA/SCR calculées par neurokit2 (interval-related).
+    """
+    # On lit les données saved si pas de gsr renseignée
+    if gsr_raw == None or sampling_rate == None:
+        temp = config.read_data()
+        gsr_raw = pd.Series(temp["gsr"])
+        print("\n\n\n\n\n\n", type(temp["ds_freq"]))
+        sampling_rate = temp["sf"]
+    
+    if target_fs == None:
+        target_fs = temp["ds_freq"]
+
+    status = temp["status"]
+    status[50] = [int(v / (sampling_rate/target_fs)) for v in status[50]]
+    status[70] = [int(v / (sampling_rate/target_fs)) for v in status[70]]
+    # --- Sécurité d'entrée ---
+
+    if not isinstance(gsr_raw, pd.Series):
+        raise TypeError("gsr_raw doit être un pandas.Series")
+    sr = int(round(float(sampling_rate)))
+    if sr <= 0:
+        raise ValueError("sampling_rate doit être > 0")
+    x = gsr_raw.astype(float).copy()
+    if x.isna().any():
+        x = x.interpolate(limit_direction="both")
+    n = len(x)
+    if n == 0:
+        raise ValueError("Signal vide")
+
+    # ---------- Pipeline NeuroKit2 (officiel) ----------
+    # Donne les colonnes: EDA_Raw, EDA_Clean, EDA_Tonic, EDA_Phasic, SCR_Onsets, SCR_Peaks, SCR_Amplitude, etc.
+    signals, info = nk.eda_process(x.values, sampling_rate=sr)  # :contentReference[oaicite:0]{index=0}
+
+    # ---------- Métriques interval-related (NeuroKit2) ----------
+    # eda_intervalrelated calcule: SCR_Peaks_N, SCR_Peaks_Amplitude_Mean, EDA_Tonic_SD
+    # + EDA_Sympathetic si durée > 64 s, + EDA_Autocorrelation si durée > 30 s
+    # On garde un fallback solide pour tolérer des versions anciennes/buguées.
+    try:
+        metrics = nk.eda_intervalrelated(signals, sampling_rate=sr)  # :contentReference[oaicite:1]{index=1}
+        # normalise la sortie (une seule ligne)
+        metrics = metrics.reset_index(drop=True)
+    except Exception:
+        data = {}
+        cols = signals.columns
+
+        # Nombre de pics SCR
+        if "SCR_Peaks" in cols:
+            data["SCR_Peaks_N"] = np.nansum(signals["SCR_Peaks"].values)
+        else:
+            data["SCR_Peaks_N"] = np.nan
+
+        # Amplitude moyenne des pics (sur les échantillons marqués 1)
+        if "SCR_Amplitude" in cols and "SCR_Peaks" in cols:
+            pk = signals["SCR_Peaks"].values.astype(bool)
+            data["SCR_Peaks_Amplitude_Mean"] = (
+                float(np.nanmean(signals.loc[pk, "SCR_Amplitude"].values)) if pk.any() else np.nan
+            )
+        else:
+            data["SCR_Peaks_Amplitude_Mean"] = np.nan
+
+        # Variabilité du tonique (SD)
+        data["EDA_Tonic_SD"] = float(np.nanstd(signals["EDA_Tonic"].values)) if "EDA_Tonic" in cols else np.nan
+
+        # EDA_Sympathetic (si durée suffisante)
+        data.update({"EDA_Sympathetic": np.nan, "EDA_SympatheticN": np.nan})
+        if n > sr * 64:
+            src = "EDA_Clean" if "EDA_Clean" in cols else ("EDA_Raw" if "EDA_Raw" in cols else None)
+            if src is not None:
+                try:
+                    data.update(nk.eda_sympathetic(signals[src], sampling_rate=sr))
+                except Exception:
+                    pass
+
+        # Autocorrélation (si durée suffisante) — lag=4 s (par défaut dans la doc)
+        data["EDA_Autocorrelation"] = np.nan
+        if n > sr * 30:
+            src = "EDA_Clean" if "EDA_Clean" in cols else ("EDA_Raw" if "EDA_Raw" in cols else None)
+            if src is not None:
+                try:
+                    data["EDA_Autocorrelation"] = float(nk.eda_autocor(signals[src], sampling_rate=sr, lag=4))
+                except Exception:
+                    pass
+
+        metrics = pd.DataFrame([data])
+
+    # ---------- Pics SCR (indices -> temps) ----------
+    if "SCR_Peaks" in signals.columns:
+        scr_peaks_idx = np.where(signals["SCR_Peaks"].values == 1)[0]
+    else:
+        scr_peaks_idx = np.array([], dtype=int)
+    t_peaks = scr_peaks_idx / float(sr)
+
+    # ---------- Downsample du BRUT pour l'affichage ----------
+    tf = int(round(float(target_fs))) if target_fs is not None else 10
+    if tf <= 0:
+        tf = 10
+    # signal_resample RENVOIE UNIQUEMENT le vecteur resamplé (pas (y, t) !)
+    gsr_down = nk.signal_resample(
+        x.values, sampling_rate=sr, desired_sampling_rate=tf, method="interpolation"
+    )  # :contentReference[oaicite:2]{index=2}
+    t_down = np.arange(len(gsr_down)) / float(tf)
+
+    # Valeur des pics projetée sur le tracé downsamplé (interpolation temporelle)
+    y_peaks = np.interp(t_peaks, t_down, gsr_down) if t_peaks.size else np.array([])
+
+    # ---------- Plotly (retourne la figure, sans show) ----------
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=t_down,
+            y=gsr_down,
+            mode="lines",
+            name="GSR (downsampled)",
+            hovertemplate="t=%{x:.2f}s<br>GSR=%{y:.4f}<extra></extra>",
+        )
+    )
+    if t_peaks.size:
+        fig.add_trace(
+            go.Scatter(
+                x=t_peaks,
+                y=y_peaks,
+                mode="markers",
+                name="SCR Peaks",
+                marker=dict(size=8, symbol="x"),
+                hovertemplate="Peak @ %{x:.2f}s<br>GSR=%{y:.4f}<extra></extra>",
+            )
+        )
+
+    for i in range(len(status[50])):
+            label_title = "stress" if (i % 2) != 0 else "rest"
+            fig.add_vline(x=t_down[status[50][i]], annotation_text=f"Start {label_title}", 
+                annotation_position="bottom right")
+            fig.add_vline(x=t_down[status[70][i]], annotation_text=f"End {label_title}", 
+                annotation_position="bottom left")
+
+    fig.update_layout(
+        title="GSR downsamplé avec pics SCR",
+        xaxis_title="Temps (s)",
+        yaxis_title="Amplitude GSR",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+        margin=dict(l=50, r=20, t=60, b=50),
+    )
+
+    return fig, metrics

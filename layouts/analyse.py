@@ -45,7 +45,7 @@ def get_layout():
                                         data[f'status_d'],
                                         micro=data[f'micro_d'],
                                         is_ds=True, bpm=data['instant_bpm'], 
-                                        gsr=data['gsr_d'],
+                                        # gsr=data['gsr_d'],
                                         time_bpm=data['time_bpm'], cycles_on_bpm=False,
                                         title=filename
                                         )
@@ -54,7 +54,7 @@ def get_layout():
         fig = modules.ploting.normalised_ecg_resp_plot(data['time'], data['resp'], 
                                         data['clean_resp'], data['cycles'], data['ecg'],
                                         data['clean_ecg'], data['ecg_peaks'], data['status'],
-                                        micro=data['micro'], gsr=data['gsr'], is_ds=False, cycles_on_bpm=False)
+                                        micro=data['micro'],  is_ds=False, cycles_on_bpm=False) # gsr=data['gsr'],
 
     # Sauvegarde des données calcul et visu de l'asr
     # _save_for_asr(channels=data)
