@@ -368,12 +368,178 @@ def plot_filtering(time, signals, max_freqs, raw_resp):
     return fig
 
 
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
+# def gsr_plot(
+#     scr_events: pd.DataFrame = None,
+#     gsr_raw: pd.Series = None,
+#     sampling_rate: float = None,
+#     target_fs: float = None
+# ):
+#     temp = None
+#     if gsr_raw is None or sampling_rate is None:
+#         temp = config.read_data()
+#         gsr_raw = temp["gsr"]
+#         sampling_rate = temp["sf"]
+#     gsr_raw = pd.Series(gsr_raw)
+#     if target_fs is None:
+#         if temp is not None and "ds_freq" in temp:
+#             target_fs = float(temp["ds_freq"])
+#         else:
+#             target_fs = 10.0
+
+#     if not isinstance(gsr_raw, pd.Series):
+#         raise TypeError("gsr_raw doit être un pandas.Series")
+#     sr = float(sampling_rate)
+#     if sr <= 0:
+#         raise ValueError("sampling_rate doit être > 0")
+#     x = gsr_raw.astype(float).copy()
+#     if x.isna().any():
+#         x = x.interpolate(limit_direction="both")
+#     n = len(x)
+#     if n == 0:
+#         raise ValueError("Signal vide")
+
+#     if scr_events is None or not isinstance(scr_events, pd.DataFrame):
+#         raise ValueError("scr_events doit être un DataFrame non vide contenant les pics SCR.")
+
+#     tf = float(target_fs) if target_fs else 10.0
+#     if tf <= 0:
+#         tf = 10.0
+
+#     t_raw = np.arange(n) / sr
+#     num_out = int(round(n * tf / sr))
+#     num_out = max(num_out, 2)
+#     t_down = np.arange(num_out) / tf
+#     # Interpolation linéaire pour avoir gsr_down à t_down
+#     # (on interpole la série brute x(t_raw) vers t_down)
+#     gsr_down = np.interp(t_down, t_raw, x.values)
+
+#     # --------- Construire les temps absolus des pics (t_peaks, en secondes) ---------
+#     cols = set(scr_events.columns)
+#     t_peaks = None
+
+#     # On a besoin de status pour convertir les temps relatifs 'phase' -> absolu
+#     status_raw = None
+#     if temp is not None and isinstance(temp.get("status", None), dict):
+#         status_raw = temp["status"]
+
+#     # Cas 1 : temps absolu direct
+#     if "t_global_s" in cols:
+#         t_peaks = pd.to_numeric(scr_events["t_global_s"], errors="coerce").to_numpy(dtype=float)
+
+#     # Cas 2 : phase + indices/temps relatifs, avec status (indices RAW start/end par phase)
+#     elif "phase" in cols and status_raw is not None and (("peak_idx" in cols) or ("t_peak_s" in cols)):
+#         t_list = []
+#         for _, row in scr_events.iterrows():
+#             ph = row["phase"]
+#             # clé phase (int/str)
+#             ph_key = ph if ph in status_raw else str(ph)
+#             if ph_key not in status_raw or not isinstance(status_raw[ph_key], (list, tuple)) or len(status_raw[ph_key]) != 2:
+#                 t_list.append(np.nan)
+#                 continue
+#             start_idx = float(status_raw[ph_key][0])  # index de début au fs brut
+#             if "peak_idx" in cols and pd.notna(row.get("peak_idx", np.nan)):
+#                 t_list.append((start_idx + float(row["peak_idx"])) / sr)
+#             elif "t_peak_s" in cols and pd.notna(row.get("t_peak_s", np.nan)):
+#                 t_list.append((start_idx / sr) + float(row["t_peak_s"]))
+#             else:
+#                 t_list.append(np.nan)
+#         t_peaks = np.asarray(t_list, dtype=float)
+
+#     # Cas 3 : indices globaux
+#     elif "peak_idx" in cols:
+#         t_peaks = pd.to_numeric(scr_events["peak_idx"], errors="coerce").to_numpy(dtype=float) / sr
+
+#     # Cas 4 : t_peak_s supposé absolu (fallback)
+#     elif "t_peak_s" in cols:
+#         t_peaks = pd.to_numeric(scr_events["t_peak_s"], errors="coerce").to_numpy(dtype=float)
+
+#     else:
+#         raise ValueError(
+#             "scr_events ne contient pas d'information temporelle exploitable. "
+#             "Attendu: 't_global_s' OU ('phase' + ('peak_idx' ou 't_peak_s') avec status) "
+#             "OU 'peak_idx' (global) OU 't_peak_s' (absolu)."
+#         )
+
+#     # Nettoyage/clip aux bornes du signal
+#     t_peaks = np.asarray(t_peaks, dtype=float)
+#     valid = np.isfinite(t_peaks) & (t_peaks >= t_raw[0]) & (t_peaks <= t_raw[-1])
+#     t_peaks = t_peaks[valid]
+
+#     # Valeur des pics projetée sur le tracé downsamplé (interpolation sur t_down)
+#     y_peaks = np.interp(t_peaks, t_down, gsr_down) if t_peaks.size else np.array([])
+
+#     # --------- Figure ----------
+#     fig = go.Figure()
+#     fig.add_trace(
+#         go.Scatter(
+#             x=t_down, y=gsr_down, mode="lines", name="GSR (downsampled)",
+#             hovertemplate="t=%{x:.2f}s<br>GSR=%{y:.4f}<extra></extra>",
+#         )
+#     )
+#     if t_peaks.size:
+#         fig.add_trace(
+#             go.Scatter(
+#                 x=t_peaks, y=y_peaks, mode="markers", name="SCR Peaks",
+#                 marker=dict(size=8, symbol="x"),
+#                 hovertemplate="Peak @ %{x:.2f}s<br>GSR=%{y:.4f}<extra></extra>",
+#             )
+#         )
+
+#     # --------- Lignes de phase : on REPRODUIT ton workflow (status -> indices downsample -> t_down[idx]) ---------
+#     if status_raw is not None and isinstance(status_raw, dict) and len(status_raw) > 0:
+#         # Construire une version downsamplée des indices de phase (comme dans ton code d'origine)
+#         # idx_ds = round(idx_raw / (sr / tf))
+#         status_ds = {}
+#         scale = sr / tf
+#         for k, bounds in status_raw.items():
+#             if isinstance(bounds, (list, tuple)) and len(bounds) == 2:
+#                 s_idx = int(round(float(bounds[0]) / scale))
+#                 e_idx = int(round(float(bounds[1]) / scale))
+#                 # clamp aux bornes de t_down
+#                 s_idx = int(np.clip(s_idx, 0, len(t_down) - 1))
+#                 e_idx = int(np.clip(e_idx, 0, len(t_down) - 1))
+#                 status_ds[k] = [s_idx, e_idx]
+
+#         # Si format "50"/"70" existe on refait exactement ta boucle ; sinon on trace générique
+#         if 50 in status_ds and 70 in status_ds:
+#             for i in range(len(status_ds[50])):
+#                 label_title = "stress" if (i % 2) != 0 else "rest"
+#                 fig.add_vline(
+#                     x=t_down[status_ds[50][i]],
+#                     annotation_text=f"Start {label_title}",
+#                     annotation_position="bottom right",
+#                 )
+#                 fig.add_vline(
+#                     x=t_down[status_ds[70][i]],
+#                     annotation_text=f"End {label_title}",
+#                     annotation_position="bottom left",
+#                 )
+#         else:
+#             # fallback: pour chaque phase clé
+#             for key, (s_idx, e_idx) in status_ds.items():
+#                 label_title = f"phase {key}"
+#                 fig.add_vline(
+#                     x=t_down[s_idx],
+#                     annotation_text=f"Start {label_title}",
+#                     annotation_position="bottom right",
+#                 )
+#                 fig.add_vline(
+#                     x=t_down[e_idx],
+#                     annotation_text=f"End {label_title}",
+#                     annotation_position="bottom left",
+#                 )
+
+#     fig.update_layout(
+#         title="GSR downsamplé avec pics SCR (aligné)",
+#         xaxis_title="Temps (s)",
+#         yaxis_title="Amplitude GSR",
+#         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+#         margin=dict(l=50, r=20, t=60, b=50),
+#     )
+
+#     return fig
 
 import neurokit2 as nk
-
 
 def gsr_plot_with_metrics(
     gsr_raw: pd.Series = None,
@@ -398,12 +564,12 @@ def gsr_plot_with_metrics(
         Métriques EDA/SCR calculées par neurokit2 (interval-related).
     """
     # On lit les données saved si pas de gsr renseignée
-    if gsr_raw == None or sampling_rate == None:
-        temp = config.read_data()
-        gsr_raw = pd.Series(temp["gsr"])
+    temp = config.read_data()
+    if gsr_raw is None or sampling_rate is None:
+        gsr_raw = temp["gsr"]
         print("\n\n\n\n\n\n", type(temp["ds_freq"]))
         sampling_rate = temp["sf"]
-    
+    gsr_raw = pd.Series(gsr_raw)
     if target_fs == None:
         target_fs = temp["ds_freq"]
 
