@@ -305,6 +305,20 @@ def plot_instant_asr(
                 annotation_position="bottom left")
     return fig
 
+
+def plot_mean_asr_by_phase(df, metric: str):
+    fig=go.Figure()
+    values = df[metric].tolist()
+    fig.add_trace(go.Scatter(
+        x=('repos1', 'stress', 'repos2'),
+        y=values,
+        mode="lines",
+        name=f"Mean {metric}",
+        line=dict(color="purple"),
+        hoverinfo='skip'
+    ))
+    return fig
+
 import plotly.graph_objs as go
 
 def plot_filtering(time, signals, max_freqs, raw_resp):
