@@ -44,6 +44,13 @@ def save_data(channels, folder=analysis_path) -> None:
     # Supression des ecg_peaks car sauvegardés en .pkl à part
     ecg_peaks = channels.pop('ecg_peaks')
     ecg_peaks.to_pickle(os.path.join(folder, 'ecg_peaks.pkl'))
+    
+
+    # Suppression et sauvegarde des métriques scr en .pkl à part
+    scr_metrics = channels.pop('metrics_scr')
+    scr_metrics.to_pickle(os.path.join(folder, 'scr_metrics.pkl'))
+    raw_scr_pics = channels.pop('raw_scr_pics')
+    raw_scr_pics.to_pickle(os.path.join(folder, 'raw_scr_pics.pkl'))
 
     data = {}
     for channel in useful_channel_asr:
@@ -91,6 +98,24 @@ def is_data(
             return False
     return True
 
+def is_gsr_data(folder=analysis_path, files=["raw_scr_pics.pkl", "scr_metrics.pkl"]):
+    return is_data(folder, files)
+
+def read_gsr_data(
+    folder=analysis_path,
+    scr_metrics_file="scr_metrics.pkl", 
+    raw_scr_pics_file="raw_scr_pics.pkl"    
+):
+    name = get_current_session_name()
+    if name == '':
+        return None
+    folder         = os.path.join(SESSION_FOLDER, name)
+    folder         = os.path.join(folder, "data")
+    scr_metrics_file, raw_scr_pics_file = (os.path.join(folder, f) for f in (scr_metrics_file, raw_scr_pics_file))
+    data = {}
+    data['metrics_scr'] = pd.read_pickle(scr_metrics_file)
+    data['raw_scr_pics'] = pd.read_pickle(raw_scr_pics_file)
+    return data
 
 def read_data(
         folder=analysis_path, freq_file="freq.json",
@@ -103,11 +128,20 @@ def read_data(
         return None
     folder         = os.path.join(SESSION_FOLDER, name)
     folder         = os.path.join(folder, "data")
-    data_path      = os.path.join(folder, data_file)
-    freq_path      = os.path.join(folder, freq_file)
-    cycles_path    = os.path.join(folder, cycles_file)
-    ecg_peaks_path = os.path.join(folder, ecg_peaks_file)
-    status_path    = os.path.join(folder, status_file)
+    # data_path      = os.path.join(folder, data_file)
+    # freq_path      = os.path.join(folder, freq_file)
+    # cycles_path    = os.path.join(folder, cycles_file)
+    # ecg_peaks_path = os.path.join(folder, ecg_peaks_file)
+    # status_path    = os.path.join(folder, status_file)
+    # scr_metrics_path  = os.path.join(folder, scr_metrics_file)
+    # raw_scr_pics_path = os.path.join(folder, raw_scr_pics_file)
+    (data_path, freq_path, cycles_path, ecg_peaks_path,
+     status_path) = (
+        os.path.join(folder, f) for f in (
+            data_file, freq_file, cycles_file, ecg_peaks_file,
+            status_file
+        )
+    )
     
     # Lecture des données 
     with open(data_path, 'rb') as file:
@@ -124,6 +158,9 @@ def read_data(
     data['sf'] = freqs['sf']
     data['ds_freq'] = freqs['ds_freq'] if freqs['ds_freq'] != 'None' else None
 
+    if is_gsr_data():
+        gsr_data = read_gsr_data()
+        for key, value in gsr_data.items(): data[key] = value
     # debug
     # print(data['ecg_peaks'])
     # fin debug

@@ -5,6 +5,7 @@ from modules.downsampling import downsample_signal
 import config
 import os
 from modules.ploting import normalised_ecg_resp_plot
+from modules.gsr_extraction import compute_scr_with_status
 
 def extract_channels(file_name):
     bdf = read_raw_bdf(file_name)
@@ -86,6 +87,7 @@ def extract_signals(file_name: str=None, channels: dict=None, ds_freq=None):
 
     # Extraction de la GSR
     gsr = bdf[channels['gsr']][0].ravel()
+    metrics_scr, raw_scr_pics =  compute_scr_with_status(gsr, sf, status)
 
     # downsample = downsample_signal(sf, ds_freq, time, resp, clean_resp, ecg, clean_ecg, micro,
     #                                cycles, ecg_peaks, status)
@@ -105,7 +107,9 @@ def extract_signals(file_name: str=None, channels: dict=None, ds_freq=None):
         'cycles_features':cycles_features,
         'time_bpm':time_bpm,
         'instant_bpm': instant_bpm,
-        'gsr': gsr
+        'gsr': gsr,
+        'metrics_scr': metrics_scr,
+        'raw_scr_pics': raw_scr_pics
         # 'downsample': downsample, 
     }
     # Sauvegarde des cannaux lue
